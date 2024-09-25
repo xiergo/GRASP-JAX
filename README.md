@@ -13,4 +13,7 @@ If you have installed the AlphaFold in your machine and downloaded the dataset, 
    cd ./GRASP_JAX
    ```
 
-2. Download GRASP paramters for 
+1. Download GRASP model weights from (https://osf.io/6kjuq/) and move them to the path where you stored the AlphaFold dataset
+
+    ```
+    wget 
