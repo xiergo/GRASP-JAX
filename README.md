@@ -56,7 +56,7 @@ Extra optinal arguments:
    * -i:  Adjust the iteration num of iteractive filtering strategy by this argument, default is 1
    * -w:  Select inference mode of GRASP, 'quick' or 'normal', default mode is 'normal' 
 
-Any other detailed argument can see the file run_alphafold.sh and run_alphafold.py. One common used argument is `max_recycle_per_iter` which
+Any other detailed argument can see the file `run_alphafold.sh` and `run_alphafold.py`. One common used argument is `max_recycle_per_iter` which
 controls the max recycle number in each iteration. You can search this argument in the `run_alphafold.py`. Default recycle number for normal mode 
 is 20 and quick mode is 4.
 
