@@ -51,10 +51,10 @@ Explanation of arguments:
 
 Extra optinal arguments:
 
-   * -p:  reuse the multiple sequence alignment(MSA), you need to prepare a folder named "msas" under the output folder
-   * -z:  if you have the feature pickle file from AlphaFold, you can skip the process of querying msas and templates, must be sure the `-p` is true
-   * -i:  you can adjust the iteration num of iteractive filtering strategy by this argument, default is 1
-   * -w:  inference mode of GRASP, 'quick' or 'normal', default mode is 'normal' 
+   * -p:  Reuse the multiple sequence alignment(MSA), you need to prepare a folder named "msas" under the output folder
+   * -z:  If you have the feature pickle file from AlphaFold, you can skip the process of querying msas and templates, must be sure the `-p` is true
+   * -i:  Adjust the iteration num of iteractive filtering strategy by this argument, default is 1
+   * -w:  Select inference mode of GRASP, 'quick' or 'normal', default mode is 'normal' 
 
 Any other detailed argument can see the file run_alphafold.sh and run_alphafold.py. A common adjusted argument is `max_recycle_per_iter` which
 controls the max recycle number in each iteration. You can seach this argument in the run_alphafold.py. Default recycle number for normal mode 
