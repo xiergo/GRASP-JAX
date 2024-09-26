@@ -38,7 +38,7 @@ Then you can run GRASP inference as following command(e.g. 1DE4 in examples fold
 
    ```
    unzip examples/1DE4.zip  
-   bash run_alphafold.sh -d PATH_to_your_AF2_database -o test_1DE4 -f examples/1DE4.fasta \
+   bash run_grasp.sh -d PATH_to_your_AF2_database -o test_1DE4 -f examples/1DE4.fasta \
    -t 2024-05-01 -q example/1DE4/RPR_restr.pkl
    ```
 Explanation of arguments:
