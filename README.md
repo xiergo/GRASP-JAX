@@ -43,18 +43,18 @@ Then you can run GRASP inference as following command(e.g. 1DE4 in examples fold
    ```
 Explanation of arguments:
 
-   * -d : the path of AlphaFold databse
-   * -o: the output folder of inference
-   * -f: the path of fasta file for protein complex
-   * -t: cut-off date for avaliable monomer template
-   * -q: input restraints file
+   * -d:  the path of AlphaFold databse
+   * -o:  the output folder of inference
+   * -f:  the path of fasta file for protein complex
+   * -t:  cut-off date for avaliable monomer template
+   * -q:  input restraints file
 
 Extra optinal arguments:
 
-   * -p: reuse the multiple sequence alignment(MSA), you need to prepare a folder named "msas" under the output folder
-   * -z: if you have the feature pickle file from AlphaFold, you can skip the process of querying msas and templates, must be sure the `-p` is true
-   * -i: you can adjust the iteration num of iteractive filtering strategy by this argument, default is 1
-   * -w: inference mode of GRASP, 'quick' or 'normal', default mode is 'normal' 
+   * -p:  reuse the multiple sequence alignment(MSA), you need to prepare a folder named "msas" under the output folder
+   * -z:  if you have the feature pickle file from AlphaFold, you can skip the process of querying msas and templates, must be sure the `-p` is true
+   * -i:  you can adjust the iteration num of iteractive filtering strategy by this argument, default is 1
+   * -w:  inference mode of GRASP, 'quick' or 'normal', default mode is 'normal' 
 
 Any other detailed argument can see the file run_alphafold.sh and run_alphafold.py. A common adjusted argument is `max_recycle_per_iter` which
 controls the max recycle number in each iteration. You can seach this argument in the run_alphafold.py. Default recycle number for normal mode 
