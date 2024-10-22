@@ -1,5 +1,4 @@
 # Ref: https://github.com/sokrypton/ColabDesign.git
-import torch
 import os
 import numpy as np
 from Bio.PDB import PDBParser, PDBIO, Superimposer,PPBuilder
@@ -9,74 +8,7 @@ import random
 from Bio import PDB
 from sklearn.cluster import KMeans
 PDB_CHAIN_IDS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
-def get_rmsd_loss(true_protein, pred_CA, L=None, include_L=True, copies=1):
-  B = pred_CA.size()[0]
-  device = pred_CA.device
-  true_CA = torch.tensor(true_protein.atom_positions[:, 1, :], device=device).repeat(B, 1, 1)
-  # pred = outputs["structure_module"]["final_atom_positions"][:,1]
-  weights = torch.tensor(true_protein.atom_mask[:, 1], device=device)
-  return _get_rmsd_loss(pred_CA, true_CA, weights=weights, L=L, include_L=include_L, copies=copies)
 
-def _get_rmsd_loss(true, pred, weights=None, L=None, include_L=True, copies=1):
-  '''
-  get rmsd + alignment function
-  align based on the first L positions, computed weighted rmsd using all 
-  positions (if include_L=True) or remaining positions (if include_L=False).
-  '''
-  # normalize weights
-  length = true.shape[-2]
-  if weights is None:
-    weights = (torch.ones(length, device=true.device)/length)[...,None]
-  else:
-    weights = (weights/(weights.sum(-1,keepdims=True) + 1e-8))[...,None]
-
-  # determine alignment [L]ength and remaining [l]ength
-  if copies > 1:
-    if L is None:
-      L = iL = length // copies; C = copies-1
-    else:
-      (iL,C) = ((length-L) // copies, copies)
-  else:
-    (L,iL,C) = (length,0,0) if L is None else (L,length-L,1)
-
-  # slice inputs
-  if iL == 0:
-    (T,P,W) = (true,pred,weights)
-  else:
-    (T,P,W) = (x[...,:L,:] for x in (true,pred,weights))
-    (iT,iP,iW) = (x[...,L:,:] for x in (true,pred,weights))
-
-  # get alignment and rmsd functions
-  (T_mu,P_mu) = ((x*W).sum(-2,keepdims=True)/W.sum((-1,-2)) for x in (T,P)) # 计算质心
-  aln = _kabsch((P-P_mu)*W, T-T_mu)   
-  
-  align_fn = lambda x: (x - P_mu) @ aln + T_mu
-  msd_fn = lambda t,p,w: (w*torch.square(align_fn(p)-t)).sum((-1,-2))
-  # compute rmsd
-  if iL == 0:
-    msd = msd_fn(true,pred,weights)
-  elif C > 1:
-    # all vs all alignment of remaining, get min RMSD
-    iT = iT.reshape(-1,C,1,iL,3).swapaxes(0,-3)
-    iP = iP.reshape(-1,1,C,iL,3).swapaxes(0,-3)
-    imsd = msd_fn(iT, iP, iW.reshape(-1,C,1,iL,1).swapaxes(0,-3))
-    imsd = (imsd.min(0).sum(0) + imsd.min(1).sum(0)) / 2 
-    imsd = imsd.reshape(torch.broadcast_shapes(true.shape[:-2],pred.shape[:-2]))
-    msd = (imsd + msd_fn(T,P,W)) if include_L else (imsd/iW.sum((-1,-2)))
-  else:
-    msd = msd_fn(true,pred,weights) if include_L else (msd_fn(iT,iP,iW)/iW.sum((-1,-2)))
-  rmsd = torch.sqrt(msd + 1e-8)
-
-  return {"rmsd":rmsd, "align":align_fn, "rot":aln.float(), "trans": (T_mu-P_mu @ aln)[:, 0, :].float()}
-
-def _kabsch(a, b, return_v=False):
-    '''get alignment matrix for two sets of coordinates using PyTorch'''
-    ab = torch.matmul(a.transpose(-1, -2), b) 
-    u, s, vh = torch.linalg.svd(ab, full_matrices=False)
-    flip = torch.det(torch.matmul(u, vh)) < 0
-    u_ = torch.where(flip.unsqueeze(-1), -u[..., -1], u[..., -1]).unsqueeze(-1) 
-    u = torch.cat((u[..., :-1], u_), dim=-1) if flip.any() else u 
-    return u if return_v else torch.matmul(u, vh)
 
 def interpolate_structures(structure_A, structure_B, t ,output_path):
    parser = PDBParser()
