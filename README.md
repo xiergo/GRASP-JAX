@@ -54,17 +54,25 @@ To generate a `.pkl` file for GRASP inference, you need to provide two key files
 Each line of the restraints file contains one restraint, structured as follows:
 #### RPR restraint:
 Each line should contain two residues, the distance cutoff, and optionally, the false discovery rate (FDR). The format is: 
+
 `residue1, residue2, distance_cutoff[, fdr]`
+
 Here, `residue1` and `residue2` are formatted as `chain_index-residue_index-residue_type`, where:
+
 `chain_index` is 1-indexed (referring to the position of the chain in the FASTA file),
+
 `residue_index` is 1-indexed (the position of the residue within the chain),
+
 `residue_type` is the single-letter amino acid code, which must match the corresponding entry in the FASTA file.
+
 Example: "1-10-G" represents the 10th residue in the first chain, and the residue is Glycine (G).
 The `distance_cutoff` specifies the maximum allowed distance between the two residues, and the `fdr` (optional, defaulting to 0.05) represents the false discovery rate for the RPR restraint.
 
 #### IR Restraint:
 For independent residue (IR) restraints, the format is simpler:
+
 `residue`
+
 The residue is also specified in the same format as above: `chain_index-residue_index-residue_type`.
 
 ### Example of a Restraints File:
