@@ -1,4 +1,4 @@
-![header](img/header.png)
+![header](imgs/header.png)
 
 # GRASP-JAX
 
