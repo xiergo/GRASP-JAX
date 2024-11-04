@@ -133,7 +133,7 @@ python run_grasp.py \
 
 ## Integrated modeling with Combift
 
-   This part will be avaiable upon we prepared correspongding code.
+   This part will be avaiable upon we prepared corresponding code.
 
 ## Dataset in GRASP paper
 
