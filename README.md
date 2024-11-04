@@ -30,7 +30,8 @@ To install GRASP-JAX, follow these steps:
    conda create -n GRASP python=3.8 -f requiremts.txt
    conda activate GRASP
    ```
-
+  The installation takes ~10 minutes.
+  
 ## Prepare restraints file
 
 We use a dictionary to store restraint information for GRASP inference, which consists of three key components: `sbr`, `sbr_mask`, and `interface_mask`. The `interface_mask` is an array of shape (`N_residues`,), where `1` marks interface residues and `0` indicates the absence of relevant information. Here, `N_residues` stands for the total number of residues in the protein complex. The `sbr` is an array of shape (`N_residues`, `N_residues`, `N_bins`), where `N_bins` represents the number of distance bins used for the restraints, and it holds the distogram of the restraints between residue pairs. Finally, the `sbr_mask` is an array of shape (`N_residues`, `N_residues`), where `1` signifies a restraint between a pair of residues and `0` means no restraint exists.

@@ -320,7 +320,7 @@ def predict_structure(
   # transform_em = 'restraints'
   for model_index, (model_name, model_runner) in enumerate(
       model_runners.items()):
-    logging.info('Running model %s on %s', model_name, fasta_name)
+    logging.info('Running model %s', model_name)
     feature_dict.update(restraints0)
     # t_0 = time.time()
     restraints = restraints0.copy()
@@ -431,7 +431,8 @@ def predict_structure(
 
   ranking_output_path = os.path.join(output_dir, 'ranking_debug.json')
   with open(ranking_output_path, 'w') as f:
-    label = 'iptm+ptm' if 'iptm' in prediction_result else 'plddts'
+    # label = 'iptm+ptm' if 'iptm' in prediction_result else 'plddts'
+    label = 'plddt+1000*(recall>=0.3)'
     ranking_confidences = {model_name:confidence.tolist() for model_name, confidence in ranking_confidences.items()}
     # logging.info('ranking_confidences %s',type(ranking_confidences) )
     f.write(json.dumps(
