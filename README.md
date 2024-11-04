@@ -27,7 +27,7 @@ To install GRASP-JAX, follow these steps:
 3. create a conda Enviroment, and activate it:
 
    ```bash
-   conda create -n GRASP python=3.8 -f requiremts.txt
+   conda create -n GRASP python=3.8 -f requirements.txt
    conda activate GRASP
    ```
   The installation takes ~10 minutes.
