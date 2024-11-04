@@ -70,7 +70,7 @@ Example: "1-10-G" represents the 10th residue in the first chain, and the residu
 The `distance_cutoff` specifies the maximum allowed distance between the two residues, and the `fdr` (optional, defaulting to 0.05) represents the false discovery rate for the RPR restraint.
 
 #### IR Restraint:
-For independent residue (IR) restraints, the format is simpler:
+For interface restraints (IR), the format is simpler:
 
 `residue`
 
@@ -133,7 +133,7 @@ python run_grasp.py \
 
 ## Integrated modeling with Combift
 
-   This part will be avaiable upon we prepared corresponding code.
+   This part will be avaiable soon.
 
 ## Dataset in GRASP paper
 
