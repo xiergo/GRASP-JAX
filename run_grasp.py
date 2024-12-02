@@ -399,7 +399,7 @@ def predict_structure(
     prediction_result,recycle = model_runner.predict(processed_feature_dict,restraints,random_seed=model_random_seed,callback=callback)
     logging.info('Recycle %d finished', recycle)
     df = pd.DataFrame(mydicts)
-    df.to_csv(os.path.join(output_dir, f'{model_name}_info.csv'),sep='\t',index=False)
+    df.to_csv(os.path.join(output_dir, f'{model_name}_info.tsv'),sep='\t',index=False)
     plddt = prediction_result['plddt']
     # _save_confidence_json_file(plddt, output_dir, model_name)
     # ranking_confidence= prediction_result['ranking_confidence']
