@@ -123,13 +123,13 @@ python run_grasp.py \
 
    The output directory will include following files:
 
-   * ranked_*.pdb : pdb files ranked by plddt default.
+   * ranked_*.pdb : pdb files ranked by plddt and recall.
    
    * unrelaxed_model_1_v3_v11_{ckpt}\_{seed}_{iter}.pdb: predicted structure in each iteration.
 
    * unrelaxed_model_1_v3_v11_{ckpt}\_{seed}_final.pdb: the predicted structure in the final iteration
      
-   * unrelaxed_model_1_v3_v11_{ckpt}\_{seed}.csv: recorded crash and restraints satisfication of predicted structure in each iteration.
+   * unrelaxed_model_1_v3_v11_{ckpt}\_{seed}_info.tsv: recorded crash and restraints satisfication of predicted structure in each iteration.
 
 ## Integrated modeling with Combift
 
