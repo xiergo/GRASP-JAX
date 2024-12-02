@@ -129,7 +129,18 @@ python run_grasp.py \
 
    * unrelaxed_model_1_v3_v11_{ckpt}\_{seed}_final.pdb: the predicted structure in the final iteration
      
-   * unrelaxed_model_1_v3_v11_{ckpt}\_{seed}_info.tsv: recorded crash and restraints satisfication of predicted structure in each iteration.
+   * unrelaxed_model_1_v3_v11_{ckpt}\_{seed}_info.tsv: summary of the predicted structure in each iteration.
+     * 'Iter': iteration,
+     * 'Conf': average pLDDT across all residues,
+     * 'Total': total number of restraints used in this iteration,
+     * 'Remove': number of restraints removed after filtering in this iteration,
+     * 'Rest': number of restraints remaining after filtering in this iteration,
+     * 'MaxNbDist': maximum NBCA distance (neighboring CA distance), where NBCA distance of a residue is defined as the average CA distance to its two (one for terminal residues) flanking residues,
+     * 'BreakNum': number of breaks in this iteration,
+     * 'Recall': satisfication rate of all restraints provided before the first iteration,
+     * 'Recycle_num': number of recycles in this iteration,
+     * 'ViolNum': number of major violations (exceeding a cutoff of 5Å) of restraints at the end of this iteration,
+     * 'MaxViolDist': maximum violation distance of restraints at the end of this iteration.
 
 ## Integrated modeling with Combift
 
