@@ -129,7 +129,7 @@ python run_grasp.py \
 
    * unrelaxed_model_1_v3_v11_{ckpt}\_{seed}_final.pdb: the predicted structure in the final iteration
      
-   * unrelaxed_model_1_v3_v11_{ckpt}\_{seed}_info.tsv: summary of the predicted structure in each iteration.
+   * unrelaxed_model_1_v3_v11_{ckpt}\_{seed}_info.tsv: summary of the predicted structure in each iteration. The columns are:
      * 'Iter': iteration,
      * 'Conf': average pLDDT across all residues,
      * 'Total': total number of restraints used in this iteration,
