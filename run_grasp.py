@@ -423,11 +423,39 @@ def predict_structure(
       model_name for model_name, confidence in
       sorted(ranking_confidences.items(), key=lambda x: x[1], reverse=True)]
 
+  # Relax predictions.
+  if models_to_relax == ModelsToRelax.BEST:
+    to_relax = [ranked_order[0]]
+  elif models_to_relax == ModelsToRelax.ALL:
+    to_relax = ranked_order
+  elif models_to_relax == ModelsToRelax.NONE:
+    to_relax = []
+
+  for model_name in to_relax:
+    t_0 = time.time()
+    relaxed_pdb_str, _, violations = amber_relaxer.process(
+        prot=unrelaxed_proteins[model_name])
+    relax_metrics[model_name] = {
+        'remaining_violations': violations,
+        'remaining_violations_count': sum(violations)
+    }
+    timings[f'relax_{model_name}'] = time.time() - t_0
+
+    relaxed_pdbs[model_name] = relaxed_pdb_str
+
+    # Save the relaxed PDB.
+    relaxed_output_path = os.path.join(
+        output_dir, f'relaxed_{model_name}.pdb')
+    with open(relaxed_output_path, 'w') as f:
+      f.write(relaxed_pdb_str)
 
   for idx, model_name in enumerate(ranked_order):
     ranked_output_path = os.path.join(output_dir, f'ranked_{idx}.pdb')
     with open(ranked_output_path, 'w') as f:
-      f.write(unrelaxed_pdbs[model_name])
+      if model_name in relaxed_pdbs:
+        f.write(relaxed_pdbs[model_name])
+      else:
+        f.write(unrelaxed_pdbs[model_name])
 
   ranking_output_path = os.path.join(output_dir, 'ranking_debug.json')
   with open(ranking_output_path, 'w') as f:
