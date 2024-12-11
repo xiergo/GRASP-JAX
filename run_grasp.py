@@ -282,6 +282,8 @@ def predict_structure(
   feature_dict.update(restraints)
   unrelaxed_pdbs = {}
   unrelaxed_proteins = {}
+  relaxed_pdbs = {}
+  relax_metrics = {}
   ranking_confidences = {}
   nbdist_ca_thre=5.0
   viol_thre=5.0
