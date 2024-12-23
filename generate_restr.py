@@ -108,7 +108,7 @@ def get_restr_dict(restraints_file, fasta_file):
 if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('restraints_file', type=str, help='path to the restraints file. Each line contains one restraint, with the format: "chainindex1-residueindex1-residuetype1, chainindex1-residueindex1-residuetype1, distance_cutoff" for the RPR restraint, "chainindex1-residueindex1-residuetype1" for the IR restraint.')
+    parser.add_argument('restraints_file', type=str, help='path to the restraints file with a .txt extension. Each line contains one restraint, with the format: "chainindex1-residueindex1-residuetype1, chainindex1-residueindex1-residuetype1, distance_cutoff" for the RPR restraint, "chainindex1-residueindex1-residuetype1" for the IR restraint.')
     parser.add_argument('fasta_file', type=str, help='path to the fasta file')
     parser.add_argument('--output_file', type=str, default=None, help='path to the output file. If not specified, the output file will be the same as the restraints file with a .pkl extension.')
     args = parser.parse_args()
