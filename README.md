@@ -12,8 +12,8 @@ To install GRASP-JAX, follow these steps:
 1. Clone the repository and navigate into it.
 
    ```bash
-   git clone https://github.com/xiergo/GRASP_JAX.git
-   cd ./GRASP_JAX
+   git clone https://github.com/xiergo/GRASP-JAX.git
+   cd ./GRASP-JAX
    ```
 
 2. Download the necessary genetic database as described in [AlphaFold](https://github.com/google-deepmind/alphafold). Additionally, download the GRASP model weights from [this link](https://osf.io/6kjuq/) and move them to the directory where you stored the AlphaFold genetic database:
