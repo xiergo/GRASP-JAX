@@ -113,7 +113,7 @@ if __name__ == '__main__':
     parser.add_argument('--output_file', type=str, default=None, help='path to the output file. If not specified, the output file will be the same as the restraints file with a .pkl extension.')
     args = parser.parse_args()
 
-    restr_dict = my_get_restr_dict(args.restraints_file, args.fasta_file)
+    restr_dict = get_restr_dict(args.restraints_file, args.fasta_file)
     if args.output_file is None:
         output_file = args.restraints_file.replace('.txt', '.pkl')
     else:
