@@ -36,13 +36,6 @@ To install GRASP-JAX, follow these steps:
    conda install -c conda-forge pdbfixer
    ```
 
-5. Install the JAX package:
-   
-  Please refer to [JAX intallation guide on their official page](https://jax.readthedocs.io/en/latest/installation.html) to install jax package corresponding to your CUDA and cudnn version. Here is an example (which has been tested locally):
-  ```bash
-  pip install jax==0.4.26
-  pip install jaxlib==0.4.26 -f https://storage.googleapis.com/jax-releases/jax_releases.html
-  ```
 
   The installation takes ~10 minutes.
   

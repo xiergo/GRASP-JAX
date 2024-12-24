@@ -505,12 +505,12 @@ def main(argv):
     _check_flag('uniref30_database_path', 'db_preset',
                 should_be_set=not use_small_bfd)
 
-    _check_flag('pdb70_database_path', 'model_preset',
-                should_be_set=not run_multimer_system)
-    _check_flag('pdb_seqres_database_path', 'model_preset',
-                should_be_set=run_multimer_system)
-    _check_flag('uniprot_database_path', 'model_preset',
-                should_be_set=run_multimer_system)
+    # _check_flag('pdb70_database_path', 'model_preset',
+    #             should_be_set=not run_multimer_system)
+    # _check_flag('pdb_seqres_database_path', 'model_preset',
+    #             should_be_set=run_multimer_system)
+    # _check_flag('uniprot_database_path', 'model_preset',
+    #             should_be_set=run_multimer_system)
 
     if run_multimer_system:
       template_searcher = hmmsearch.Hmmsearch(
