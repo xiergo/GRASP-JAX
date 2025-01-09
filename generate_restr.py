@@ -93,11 +93,15 @@ def get_restr_dict(restraints_file, fasta_file):
         xs = [i.strip() for i in line.split(',')]
         if len(xs) == 1:
             restraints['interface_mask'][get_site_pos(xs[0])] = 1
-        elif len(xs) == 3:
+        elif len(xs) == 3 or len(xs) == 4:
             pos1 = get_site_pos(xs[0])
             pos2 = get_site_pos(xs[1])
             cutoff = float(xs[2])
-            distri = get_distri(cutoff)
+            if len(xs) == 4:
+                fdr = float(xs[3])
+                distri = get_distri(cutoff, fdr=fdr)
+            else:
+                distri = get_distri(cutoff)
             assert restraints['sbr_mask'][pos1, pos2] == 0, f'Line {i+1}: Restraint already exists between {xs[0]} and {xs[1]}'
             assert restraints['sbr_mask'][pos2, pos1] == 0, f'Line {i+1}: Restraint already exists between {xs[1]} and {xs[0]}'
             restraints['sbr_mask'][pos1, pos2] = 1
