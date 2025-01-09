@@ -124,7 +124,7 @@ if __name__ == '__main__':
 
     restr_dict = get_restr_dict(args.restraints_file, args.fasta_file)
     if args.output_file is None:
-        output_file = args.restraints_file.replace('.txt', '.pkl')
+        output_file = args.restraints_file.replace('.txt', '')+'.pkl'
     else:
         output_file = args.output_file
     with open(output_file, 'wb') as f:
