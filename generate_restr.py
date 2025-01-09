@@ -98,10 +98,15 @@ def get_restr_dict(restraints_file, fasta_file):
             pos2 = get_site_pos(xs[1])
             cutoff = float(xs[2])
             distri = get_distri(cutoff)
+            assert restraints['sbr_mask'][pos1, pos2] == 0, f'Line {i+1}: Restraint already exists between {xs[0]} and {xs[1]}'
+            assert restraints['sbr_mask'][pos2, pos1] == 0, f'Line {i+1}: Restraint already exists between {xs[1]} and {xs[0]}'
             restraints['sbr_mask'][pos1, pos2] = 1
+            restraints['sbr_mask'][pos2, pos1] = 1
             restraints['sbr'][pos1, pos2] = distri
+            restraints['sbr'][pos2, pos1] = distri
         else:
             raise ValueError(f'Line {i+1}: Invalid restraint format')
+    print(f'Total number of restraints: {int(restraints["interface_mask"].sum())} IRs and {int(restraints["sbr_mask"].sum())//2} RPRs')
     return restraints
 
 
