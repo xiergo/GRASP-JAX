@@ -154,7 +154,7 @@ python run_grasp.py \
 This section demonstrates how to integrate Combfit into GRASP to refine protein complex models using cryo-EM data. Before running GRASP with Combfit, you must install [**powerfit3**](https://github.com/xinyuduchem/Powerfit3). After installation, you can run the integrated pipeline with a single command, for example:
 ```bash
 bash run_grasp_w_em.sh \
-    -d /lustre/grp/gyqlab/share/AF2_database \
+    -d /path/to/AF2_database \
     -o ./integrated_output \
     -f ./8cx0/8cx0.fasta \
     -t 2021-10-08 \
