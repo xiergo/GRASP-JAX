@@ -234,7 +234,7 @@ def predict_structure(
     resolution=None,
 ):
   """Predicts structure using AlphaFold for the given sequence."""
-  logging.info('Predicting %s', fasta_name)
+  # logging.info('Predicting %s', fasta_name)
   timings = {}
   # output_dir = os.path.join(output_dir_base, fasta_name)
   output_dir = output_dir_base
@@ -246,7 +246,7 @@ def predict_structure(
 
   # Get features.
   t_0 = time.time()
-  if not os.path.exists(feature_path):
+  if not (feature_path and os.path.exists(feature_path)):
     logging.info('No feature pickle found, generating features')
     feature_dict = data_pipeline.process(
         input_fasta_path=fasta_path,
@@ -490,7 +490,7 @@ def main(argv):
   # if len(fasta_names) != len(set(fasta_names)):
   #   raise ValueError('All FASTA paths must have a unique basename.')
 
-  if not os.path.exists(FLAGS.feature_pickle):
+  if not (FLAGS.feature_pickle and os.path.exists(FLAGS.feature_pickle)):
     for tool_name in (
         'jackhmmer', 'hhblits', 'hhsearch', 'hmmsearch', 'hmmbuild', 'kalign'):
       if not FLAGS[f'{tool_name}_binary_path'].value:
