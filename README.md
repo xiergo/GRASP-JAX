@@ -181,7 +181,6 @@ run_grasp.py:
     (an integer)
   --mode: The mode of running GRASP, "normal" or "quick".
     (default: 'normal')
-  --mrc_path: Path to the mrc file of density map.
   --output_dir: Path to a directory that will store the results.
   --resolution: Resolution of the mrc file
     (default: '10.0')
