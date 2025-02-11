@@ -188,7 +188,10 @@ run_grasp.py:
     (a number)
   --restraints_file: Path to a restraint file. If not provided,
     inference will be done without restraints.
-   --rank_by: <plddt|ptm>: Specifies the metric for ranking models. If set to "plddt" (default), models are ranked by pLDDT. If set to "ptm", models are ranked using the weighted score 0.2*pTM + 0.8*ipTM. In both cases, models with a recall value not less than 0.3 are prioritized.
+   --rank_by: <plddt|ptm>: Specifies the metric for ranking models.
+    If set to "plddt" (default), models are ranked by pLDDT.
+    If set to "ptm", models are ranked using the weighted score 0.2*pTM + 0.8*ipTM.
+    In both cases, models with a recall value not less than 0.3 are prioritized.
     (default: 'plddt')
 ```
 The other arguments are identical to those used in AlphaFold. You can view the complete list of arguments by typing `python run_grasp.py --help`.
