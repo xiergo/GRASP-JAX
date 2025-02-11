@@ -126,7 +126,7 @@ After adding the customized RPR restraints distribution to the `XL_DISTRI` dicti
 ```
 
 ### Conversion between `.pkl` and `.txt` files
-We provide a script generate_restr.py to convert between .pkl and .txt files. To use this script, run the following command:
+We provide a script `generate_restr.py` to convert between `.pkl` and `.txt` files. To use this script, run the following command:
 
 ```bash
 python generate_restr.py -h
@@ -151,7 +151,7 @@ optional arguments:
 ```
 You need to provide two necessary files:
 
-- restraints_file: The file you want to convert from (either .txt or .pkl).
+- restraints_file: The file you want to convert from (either `.txt` or `.pkl`).
 
 - fasta_file: The FASTA file containing the sequence of the protein complex, which should be the one used for searching through the genetic database.
 
