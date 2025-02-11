@@ -101,7 +101,7 @@ In this example:
 **Note**: The order of the lines does not matter. Multiple lines linked to the same residue pair are not allowed. If multiple types of crosslinkers crosslink to the same residue pair, you need to decide which one to use. Commonly, the one with the shortest distance cutoff is used.
 
 #### Customizing the RPR Restraints Distribution
-You can also customize the RPR restraints distribution using the `.txt` file. To do this, you need to add the customized RPR restraints distribution to the `XL_DISTRI` dictionary in the `generate_restr.py` script. The `XL_DISTRI` dictionary is a dictionary of dictionaries, where the keys are the distribution names (e.g., crosslinker names), and the values are arrays of shape (`N_bins`,) representing the distribution of the restraints. The array should sum up to 1.
+You can also customize the RPR restraints distribution using the `.txt` file. To do this, you need to add the customized RPR restraints distribution to the `XL_DISTRI` dictionary in the `generate_restr.py` script. The `XL_DISTRI` dictionary is a dictionary of pre-defined distributions, where the keys are the distribution names (e.g., crosslinker names), and the values are arrays of shape (`N_bins`,) representing the distribution of the restraints. The array should sum up to 1.
 
 Here is an example of a `DSS` distribution:
 
