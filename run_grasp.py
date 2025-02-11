@@ -44,6 +44,7 @@ from alphafold.data.tools.align import interpolate_structures,extract_restraints
 import jax.numpy as jnp
 import numpy as np
 import tree
+from generate_restr import Restraints
 # Internal import (7716).
 # from alphafold.data.tools.powerfit_api import *
 # logging.set_verbosity(logging.INFO)
@@ -66,7 +67,7 @@ flags.DEFINE_string('output_dir', None, 'Path to a directory that will '
 flags.DEFINE_integer('iter_num', 5,'Maximum iteration for iterative restraint filtering.')
 flags.DEFINE_string('mode', 'normal', 'The mode of running GRASP, "normal" or "quick".')
 flags.DEFINE_string('feature_pickle', None, 'Path to the feature dictionary generated using AlphaFold-multimer\'s protocal. If not specified, other arguments used for generating features will be required.')
-flags.DEFINE_string('restraints_pickle', None, 'Path to a restraint pickle file. If not provided, inference will be done without restraints.')
+flags.DEFINE_string('restraints_file', None, 'Path to a restraint file. If not provided, inference will be done without restraints. If restraints_file is not ".pkl" file, the fasta_path should be provided')
 flags.DEFINE_string('jackhmmer_binary_path', shutil.which('jackhmmer'),
                     'Path to the JackHMMER executable.')
 flags.DEFINE_string('hhblits_binary_path', shutil.which('hhblits'),
@@ -107,6 +108,14 @@ flags.DEFINE_enum('db_preset', 'full_dbs',
                   'Choose preset MSA database configuration - '
                   'smaller genetic database config (reduced_dbs) or '
                   'full genetic database config  (full_dbs)')
+
+flags.DEFINE_enum(
+    'rank_by', 'plddt', ['plddt', 'ptm'],
+    'Specifies the metric for ranking models. '
+    'If set to "plddt" (default), models are ranked by pLDDT. '
+    'If set to "ptm", models are ranked using the weighted score 0.2*pTM + 0.8*ipTM. '
+    'In both cases, models with a recall value not less than 0.3 are prioritized.'
+)
 # flags.DEFINE_enum('model_preset', 'multimer',
 #                   ['monomer', 'monomer_casp14', 'monomer_ptm', 'multimer','multimer-1','multimer-2','multimer-3','multimer-4','multimer-5'],
 #                   'Choose preset model configuration - the monomer model, '
@@ -269,10 +278,15 @@ def predict_structure(
     'sbr_mask' : np.zeros((seq_length, seq_length)).astype(dtype),
     'interface_mask': np.zeros(seq_length).astype(dtype)}
   if os.path.exists(restraints_path):
-    restraints_input = pickle.load(open(restraints_path,'rb'))
-    logging.info(f'read restraints from {restraints_path} successfully')
-    if 'asym_id' in restraints_input:
-      assert (restraints_input['asym_id'] == feature_dict['asym_id']).all()
+    if restraints_path.endswith('.pkl'):
+      restraints_input = pickle.load(open(restraints_path,'rb'))
+      logging.info(f'read restraints from {restraints_path} successfully')
+    else:
+      assert fasta_path is not None, 'fasta_path should be provided when restraints_path is not a ".pkl" file'
+      r = Restraints(fasta_path)
+      restraints_input = r.convert_restraints(restraints_path)
+    # if 'asym_id' in restraints_input:
+      # assert (restraints_input['asym_id'] == feature_dict['asym_id']).all()
     restraints_input = {k: v for k, v in restraints_input.items() if k in ['sbr','sbr_mask','interface_mask']}
     restraints.update(restraints_input)
     rpr_num = int(restraints['sbr_mask'].sum()/2)
@@ -367,7 +381,7 @@ def predict_structure(
           mydict = {
             'Iter': it+1,
             'Conf': confidence,
-            #'RankScore': ranking_score,
+            'RankScore': ranking_score,
             'Total': rm_num+rest,
             'Remove': rm_num,
             'Rest': rest,
@@ -413,8 +427,12 @@ def predict_structure(
         b_factors=plddt_b_factors,
         remove_leading_feature_dimension=not model_runner.multimer_mode)
     # Rank by model confidence.
-    ranking_confidences[model_name] = prediction_result['mean_plddt'] + (prediction_result['recall']>=0.3)*1000
-    # ranking_confidences[model_name] = prediction_result['ranking_confidence']
+    if FLAGS.rank_by == 'plddt':
+      ranking_confidences[model_name] = prediction_result['mean_plddt'] + (prediction_result['recall']>=0.3)*1000
+      label = 'plddt+1000*(recall>=0.3)'
+    elif FLAGS.rank_by == 'ptm':
+      ranking_confidences[model_name] = prediction_result['ranking_confidence']+(prediction_result['recall']>=0.3)*1000
+      label = '0.8*iptm+0.2*ptm+1000*(recall>=0.3)'
     unrelaxed_proteins[model_name] = unrelaxed_protein
     unrelaxed_pdbs[model_name] = protein.to_pdb(unrelaxed_protein)
     unrelaxed_pdb_path = os.path.join(output_dir, f'unrelaxed_{model_name}_final.pdb')
@@ -462,7 +480,7 @@ def predict_structure(
   ranking_output_path = os.path.join(output_dir, 'ranking_debug.json')
   with open(ranking_output_path, 'w') as f:
     # label = 'iptm+ptm' if 'iptm' in prediction_result else 'plddts'
-    label = 'plddt+1000*(recall>=0.3)'
+    
     ranking_confidences = {model_name:confidence.tolist() for model_name, confidence in ranking_confidences.items()}
     # logging.info('ranking_confidences %s',type(ranking_confidences) )
     f.write(json.dumps(
@@ -598,7 +616,7 @@ def main(argv):
       feature_path=FLAGS.feature_pickle,
       mode = FLAGS.mode,
       iter_num=FLAGS.iter_num,
-      restraints_path=FLAGS.restraints_pickle,
+      restraints_path=FLAGS.restraints_file,
       data_pipeline=data_pipeline,
       model_runners=model_runners,
       amber_relaxer=amber_relaxer,
