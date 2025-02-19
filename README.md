@@ -73,7 +73,7 @@ residue1, residue2, distance_cutoff[, fdr]
   
   Example: `1-10-G` represents the 10th residue in the first chain, and the residue is Glycine (G).
 
-- **`distance_cutoff`**: Specifies the maximum allowed distance between the two residues.
+- **`distance_cutoff`**: Specifies the maximum allowed distance between the CB atoms of two residues (or CA atoms for glycine).
 - **`fdr`**: (Optional, defaulting to 0.05) Represents the false discovery rate for the RPR restraint.
 
 #### IR Restraint
