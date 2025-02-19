@@ -3,6 +3,10 @@
 # GRASP-JAX
 
 Our tool provides accurate protein complex structure prediction, seamlessly integrated with diverse experimental restraints, using JAX. 
+
+To enhance accessibility, we provide Colab notebooks that eliminate the dependency on local GPU resources: <a href="https://colab.research.google.com/github/xiergo/GRASP-JAX/blob/main/GRASP-JAX.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a>
+
+
 The original model was trained with the MindSpore version, which is available in [GRASP-MS](https://github.com/xiergo/GRASP-MS).
 
 ## Installation
