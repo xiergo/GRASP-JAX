@@ -4,4 +4,6 @@
     --data_dir /lustre/grp/gyqlab/share/AF2_database \
     --feature_pickle $1 \
     --restraints_file $2 \
-    --output_dir $3
+    --output_dir $3 \
+    --fasta_path ${4:-None} \
+    --rank_by ${5:-plddt} # plddt or ptm

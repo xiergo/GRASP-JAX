@@ -35,7 +35,7 @@ def reorder_seq_dict(seq_dict):
 def get_fasta_dict(fasta_file):
     # this function should return a dictionary that maps fasta chain ids to its sequence, 
     # for example, if the fasta file contains two sequences, the dictionary should be:
-    # {'A': 'ACGT', 'B: 'CGTA'}
+    # {1: 'ACGT', 2: 'CGTA'}
     with open(fasta_file, 'r') as f:
         fasta_dict = {}
         seq = ''
@@ -61,15 +61,30 @@ def get_asym_id(fasta_dict):
     return np.concatenate(ids)
 
 
+def get_mapping(fasta_dict):
+    abs_to_rel = {} # abs_pos_idx: f'{chain_id}-{res_id}-{res_type}'
+    res_to_abs = {} # (chain_id, res_id): (abs_pos_idx, res_type)
+    idx = 0
+    for i, seq in fasta_dict.items():
+        for j, res_type in enumerate(seq, 1):
+            abs_to_rel[idx] = f'{i}-{j}-{res_type}'
+            res_to_abs[(i, j)] = (idx, res_type)
+            idx += 1
+    return abs_to_rel, res_to_abs
+
+
 class Restraints:
     def __init__(self, fasta_file):
         fasta_dict = get_fasta_dict(fasta_file)
-        self.fasta_dict = reorder_seq_dict(fasta_dict)
+        fasta_dict = reorder_seq_dict(fasta_dict)
+        self.abs_to_rel, self.rel_to_abs = get_mapping(fasta_dict)
+        self.seqlen = sum(len(seq) for seq in fasta_dict.values())
 
     def load_restraints(self, restr_file):
         if restr_file.endswith('.pkl'):
             with open(restr_file, 'rb') as f:
                 restr_dict = pickle.load(f)
+            restr_dict = {k:v for k,v in restr_dict.items() if k in ['sbr', 'sbr_mask', 'interface_mask']}
             return restr_dict
         else:
             with open(restr_file, 'r') as f:
@@ -99,7 +114,6 @@ class Restraints:
 
         return restr1
 
-
     def compare_restraints(self, r1, r2):
         if isinstance(r1, list):
             assert len(r1)==len(r2), f'Length of restraints lists are different: {len(r1)} vs {len(r2)}'
@@ -114,13 +128,13 @@ class Restraints:
 
     def arraydict_to_textlist(self, restr_dict):
         # this function should return a list of strings, each string contains one restraint
-        fasta_dict = self.fasta_dict
-        my_dict = {} # index: f'{chain_id}-{res_id}-{res_type}'
-        idx = 0
-        for i, seq in enumerate(fasta_dict.values(), 1):
-            for j, res_type in enumerate(seq, 1):
-                my_dict[idx] = f'{i}-{j}-{res_type}'
-                idx += 1
+        # fasta_dict = self.fasta_dict
+        # my_dict = {} # index: f'{chain_id}-{res_id}-{res_type}'
+        # idx = 0
+        # for i, seq in enumerate(fasta_dict.values(), 1):
+        #     for j, res_type in enumerate(seq, 1):
+        #         my_dict[idx] = f'{i}-{j}-{res_type}'
+        #         idx += 1
         
         def get_cutoff(distri):
             for k, v in XL_DISTRI.items():
@@ -141,37 +155,24 @@ class Restraints:
                 continue
             distri = restr_dict['sbr'][i, j]
             cutoff = get_cutoff(distri)
-            my_key1 = my_dict[i]
-            my_key2 = my_dict[j]
-            rprs.append(f'{my_key1},{my_key2},{cutoff}')
+            rel_pos1 = self.abs_to_rel[i]
+            rel_pos2 = self.abs_to_rel[j]
+            rprs.append(f'{rel_pos1},{rel_pos2},{cutoff}')
         # IR
         irs = []
         for i in np.where(restr_dict['interface_mask'])[0]:
-            my_key = my_dict[i]
-            irs.append(my_key)
+            rel_pos = self.abs_to_rel[i]
+            irs.append(rel_pos)
         logging.info(f'Total number of restraints: {len(irs)} IRs and {len(rprs)} RPRs')
         return irs+rprs
     
     def textlist_to_arraydict(self, restr_list):
         # this function should return a dictionary that maps the restraint types to their corresponding arrays
-        fasta_dict = {i+1: v for i, v in enumerate(self.fasta_dict.values())}
-
-        asym_id = get_asym_id(fasta_dict)
-        seqlens = [len(v) for v in fasta_dict.values()]
-        cum_seqlen_dict = {k: sum(seqlens[:list(fasta_dict.keys()).index(k)]) for k in fasta_dict.keys()}
-        allseqs = ''.join(fasta_dict.values())
-        # with open(restraints_file, 'r') as f:
-        #     contents = [i.strip() for i in f.readlines()]
-        contents = restr_list
-        
         def get_site_pos(x):
             chain_id, res_id, res_type = x.split('-')
-            chain_id = int(chain_id)
-            res_id = int(res_id)
-            assert fasta_dict[chain_id][res_id-1] == res_type, f'Line {i+1}: Residue type {res_type} at position {res_id} in chain No.{chain_id} does not match sequence {fasta_dict[chain_id][res_id-1]}'
-            pos = cum_seqlen_dict[chain_id]+res_id-1
-            assert allseqs[pos] == res_type, f'Line {i+1}: Residue type {res_type} does not match total sequence at position {pos} {allseqs[pos]}'
-            return pos
+            abs_pos, res_type_in_fasta = self.rel_to_abs[(int(chain_id), int(res_id))]
+            assert res_type_in_fasta == res_type, f'Line {i+1}: Residue type {res_type} in restraint file at position {res_id} in chain No.{chain_id} does not match fasta {res_type_in_fasta}'
+            return abs_pos
         
         def get_distri(cutoff, fdr=0.05):
             if cutoff in XL_DISTRI:
@@ -186,15 +187,14 @@ class Restraints:
             return x
 
         # initialize the restraints dictionary
-        tot_len = sum(seqlens)
+        tot_len = self.seqlen
         restraints = {
             'interface_mask': np.zeros(tot_len),
             'sbr_mask': np.zeros((tot_len, tot_len)),
             'sbr': np.zeros((tot_len, tot_len, len(BINS)+1)),
-            'asym_id': asym_id, # for debugging purposes
         }
         
-        for i, line in enumerate(contents):
+        for i, line in enumerate(restr_list):
             logging.info(line)
             xs = [i.strip() for i in line.split(',')]
             if len(xs) == 1:
@@ -228,6 +228,8 @@ if __name__ == '__main__':
     parser.add_argument('-o', '--output_file', type=str, default=None, help='path to the output file. If not specified, the output file will be the same as the restraints file with extension changed to pkl or txt, depending on the input file format.')
     parser.add_argument('-d', '--debug', action='store_true', help='run additional checks to verify the conversion')
     args = parser.parse_args()
+    logging.set_verbosity(logging.INFO)
+    
 
     r = Restraints(args.fasta_file)
     if args.output_file is None:

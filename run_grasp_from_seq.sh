@@ -3,7 +3,8 @@
 fasta_path=$1
 restraints_file=$2
 output_dir=$3
-reduce_db=${4:-0} # 0 or 1, 0 means using full database (default), 1 means using reduced database
+rank_by=${4:-"plddt"} # plddt or ptm, default is plddt
+reduce_db=${5:-0} # 0 or 1, 0 means using full database (default), 1 means using reduced database
 
 if [ $reduce_db -eq 0 ]; then
 
