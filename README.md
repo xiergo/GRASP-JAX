@@ -63,7 +63,11 @@ The `.txt` file format is human-readable and easier to modify, making it the rec
 #### RPR Restraint
 For RPR restraints, each line should contain two residues, the distance cutoff, and optionally, the false discovery rate (FDR). The format is:
 ```
-residue1, residue2, distance_cutoff[, fdr]
+# not specify fdr, fdr=0.05 will be used
+residue1, residue2, distance_cutoff
+
+# or specify fdr explicitly
+residue1, residue2, distance_cutoff, fdr
 ```
 
 - **`residue1`** and **`residue2`** are formatted as `chain_index-residue_index-residue_type`, where:
