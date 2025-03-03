@@ -30,30 +30,30 @@ import numpy as np
 import pandas
 
 try:
-    import alphafold
+    import alphafold_colab
 except ModuleNotFoundError:
     raise RuntimeError(
         "\n\nalphafold is not installed. Please run `pip install colabfold[alphafold]`\n"
     )
 
-from alphafold.common import protein, residue_constants
+from alphafold_colab.common import protein, residue_constants
 
 # delay imports of tensorflow, jax and numpy
 # loading these for type checking only can take around 10 seconds just to show a CLI usage message
 if TYPE_CHECKING:
     import haiku
-    from alphafold.model import model
+    from alphafold_colab.model import model
     from numpy import ndarray
 
-from alphafold.common.protein import Protein
-from alphafold.data import (
+from alphafold_colab.common.protein import Protein
+from alphafold_colab.data import (
     feature_processing,
     msa_pairing,
     pipeline,
     pipeline_multimer,
     templates,
 )
-from alphafold.data.tools import hhsearch
+from alphafold_colab.data.tools import hhsearch
 from colabfold.citations import write_bibtex
 from colabfold.download import default_data_dir, download_alphafold_params
 from colabfold.utils import (
@@ -1238,6 +1238,470 @@ def put_mmciffiles_into_resultdir(
                     print(f"WARNING: {pdb_id} does not exist in {local_pdb_path}.")
 
 
+def my_run(
+    queries: List[Tuple[str, Union[str, List[str]], Optional[List[str]]]],
+    result_dir: Union[str, Path],
+    num_models: int,
+    is_complex: bool,
+    num_recycles: Optional[int] = None,
+    recycle_early_stop_tolerance: Optional[float] = None,
+    model_order: List[int] = [1,2,3,4,5],
+    num_ensemble: int = 1,
+    model_type: str = "auto",
+    msa_mode: str = "mmseqs2_uniref_env",
+    use_templates: bool = False,
+    custom_template_path: str = None,
+    num_relax: int = 0,
+    relax_max_iterations: int = 0,
+    relax_tolerance: float = 2.39,
+    relax_stiffness: float = 10.0,
+    relax_max_outer_iterations: int = 3,
+    keep_existing_results: bool = True,
+    rank_by: str = "auto",
+    pair_mode: str = "unpaired_paired",
+    pairing_strategy: str = "greedy",
+    data_dir: Union[str, Path] = default_data_dir,
+    host_url: str = DEFAULT_API_SERVER,
+    user_agent: str = "",
+    random_seed: int = 0,
+    num_seeds: int = 1,
+    recompile_padding: Union[int, float] = 10,
+    zip_results: bool = False,
+    prediction_callback: Callable[[Any, Any, Any, Any, Any], Any] = None,
+    save_single_representations: bool = False,
+    save_pair_representations: bool = False,
+    jobname_prefix: Optional[str] = None,
+    save_all: bool = False,
+    save_recycles: bool = False,
+    use_dropout: bool = False,
+    use_gpu_relax: bool = False,
+    stop_at_score: float = 100,
+    dpi: int = 200,
+    max_seq: Optional[int] = None,
+    max_extra_seq: Optional[int] = None,
+    pdb_hit_file: Optional[Path] = None,
+    local_pdb_path: Optional[Path] = None,
+    use_cluster_profile: bool = True,
+    feature_dict_callback: Callable[[Any], Any] = None,
+    calc_extra_ptm: bool = False,
+    use_probs_extra: bool = True,
+    **kwargs
+):
+    # check what device is available
+    # try:
+    #     # check if TPU is available
+    #     import jax.tools.colab_tpu
+    #     jax.tools.colab_tpu.setup_tpu()
+    #     logger.info('Running on TPU')
+    #     DEVICE = "tpu"
+    #     use_gpu_relax = False
+    # except:
+    #     if jax.local_devices()[0].platform == 'cpu':
+    #         logger.info("WARNING: no GPU detected, will be using CPU")
+    #         DEVICE = "cpu"
+    #         use_gpu_relax = False
+    #     else:
+    #         import tensorflow as tf
+    #         tf.get_logger().setLevel(logging.ERROR)
+    #         logger.info('Running on GPU')
+    #         DEVICE = "gpu"
+    #         # disable GPU on tensorflow
+    #         tf.config.set_visible_devices([], 'GPU')
+    DEVICE = "cpu"
+    use_gpu_relax = False
+
+    from alphafold.notebooks.notebook_utils import get_pae_json
+    from colabfold.alphafold.models import load_models_and_params
+    from colabfold.colabfold import plot_paes, plot_plddts
+    from colabfold.plot import plot_msa_v2
+
+    data_dir = Path(data_dir)
+    result_dir = Path(result_dir)
+    result_dir.mkdir(exist_ok=True)
+    model_type = set_model_type(is_complex, model_type)
+
+    # backward-compatibility with old options
+    old_names = {"MMseqs2 (UniRef+Environmental)":"mmseqs2_uniref_env",
+                 "MMseqs2 (UniRef+Environmental+Env. Pairing)":"mmseqs2_uniref_env_envpair",
+                 "MMseqs2 (UniRef only)":"mmseqs2_uniref",
+                 "unpaired+paired":"unpaired_paired"}
+    msa_mode   = old_names.get(msa_mode,msa_mode)
+    pair_mode  = old_names.get(pair_mode,pair_mode)
+    feature_dict_callback = kwargs.pop("input_features_callback", feature_dict_callback)
+    use_dropout           = kwargs.pop("training", use_dropout)
+    use_fuse              = kwargs.pop("use_fuse", True)
+    use_bfloat16          = kwargs.pop("use_bfloat16", True)
+    max_msa               = kwargs.pop("max_msa",None)
+    if max_msa is not None:
+        max_seq, max_extra_seq = [int(x) for x in max_msa.split(":")]
+
+    if kwargs.pop("use_amber", False) and num_relax == 0:
+        num_relax = num_models * num_seeds
+
+    if len(kwargs) > 0:
+        print(f"WARNING: the following options are not being used: {kwargs}")
+
+    # decide how to rank outputs
+    if rank_by == "auto":
+        rank_by = "multimer" if is_complex else "plddt"
+    if "ptm" not in model_type and "multimer" not in model_type:
+        rank_by = "plddt"
+
+    # added for actifptm calculation
+    if not is_complex and calc_extra_ptm:
+        logger.info("Calculating extra pTM is not supported for single chain prediction, skipping it.")
+        calc_extra_ptm = False
+
+    # get max length
+    max_len = 0
+    max_num = 0
+    for _, query_sequence, _ in queries:
+        N = 1 if isinstance(query_sequence,str) else len(query_sequence)
+        L = len("".join(query_sequence))
+        if L > max_len: max_len = L
+        if N > max_num: max_num = N
+
+    # get max sequences
+    # 512 5120 = alphafold_ptm (models 1,3,4)
+    # 512 1024 = alphafold_ptm (models 2,5)
+    # 508 2048 = alphafold-multimer_v3 (models 1,2,3)
+    # 508 1152 = alphafold-multimer_v3 (models 4,5)
+    # 252 1152 = alphafold-multimer_v[1,2]
+
+    set_if = lambda x,y: y if x is None else x
+    if model_type in ["alphafold2_multimer_v1","alphafold2_multimer_v2"]:
+        (max_seq, max_extra_seq) = (set_if(max_seq,252), set_if(max_extra_seq,1152))
+    elif model_type == "alphafold2_multimer_v3":
+        (max_seq, max_extra_seq) = (set_if(max_seq,508), set_if(max_extra_seq,2048))
+    else:
+        (max_seq, max_extra_seq) = (set_if(max_seq,512), set_if(max_extra_seq,5120))
+
+    if msa_mode == "single_sequence":
+        num_seqs = 1
+        if is_complex and "multimer" not in model_type: num_seqs += max_num
+        if use_templates: num_seqs += 4
+        max_seq = min(num_seqs, max_seq)
+        max_extra_seq = max(min(num_seqs - max_seq, max_extra_seq), 1)
+
+    # sort model order
+    model_order.sort()
+
+    # Record the parameters of this run
+    config = {
+        "num_queries": len(queries),
+        "use_templates": use_templates,
+        "num_relax": num_relax,
+        "relax_max_iterations": relax_max_iterations,
+        "relax_tolerance": relax_tolerance,
+        "relax_stiffness": relax_stiffness,
+        "relax_max_outer_iterations": relax_max_outer_iterations,
+        "msa_mode": msa_mode,
+        "model_type": model_type,
+        "num_models": num_models,
+        "num_recycles": num_recycles,
+        "recycle_early_stop_tolerance": recycle_early_stop_tolerance,
+        "num_ensemble": num_ensemble,
+        "model_order": model_order,
+        "keep_existing_results": keep_existing_results,
+        "rank_by": rank_by,
+        "max_seq": max_seq,
+        "max_extra_seq": max_extra_seq,
+        "pair_mode": pair_mode,
+        "pairing_strategy": pairing_strategy,
+        "host_url": host_url,
+        "user_agent": user_agent,
+        "stop_at_score": stop_at_score,
+        "random_seed": random_seed,
+        "num_seeds": num_seeds,
+        "recompile_padding": recompile_padding,
+        # "commit": get_commit(),
+        "use_dropout": use_dropout,
+        "use_cluster_profile": use_cluster_profile,
+        "use_fuse": use_fuse,
+        "use_bfloat16": use_bfloat16,
+        # "version": importlib_metadata.version("colabfold"),
+        "calc_extra_ptm": calc_extra_ptm,
+        "use_probs_extra": use_probs_extra,
+    }
+    config_out_file = result_dir.joinpath("config.json")
+    config_out_file.write_text(json.dumps(config, indent=4))
+    use_env = "env" in msa_mode
+    use_msa = "mmseqs2" in msa_mode
+    use_amber = num_models > 0 and num_relax > 0
+
+    bibtex_file = write_bibtex(
+        model_type if num_models > 0 else "", use_msa, use_env, use_templates, use_amber, result_dir
+    )
+
+    if pdb_hit_file is not None:
+        if local_pdb_path is None:
+            raise ValueError("local_pdb_path is not specified.")
+        else:
+            custom_template_path = result_dir / "templates"
+            put_mmciffiles_into_resultdir(pdb_hit_file, local_pdb_path, custom_template_path)
+
+    if custom_template_path is not None:
+        mk_hhsearch_db(custom_template_path)
+
+    pad_len = 0
+    ranks, metrics = [],[]
+    first_job = True
+    job_number = 0
+    for job_number, (raw_jobname, query_sequence, a3m_lines) in enumerate(queries):
+        if jobname_prefix is not None:
+            # pad job number based on number of queries
+            fill = len(str(len(queries)))
+            jobname = safe_filename(jobname_prefix) + "_" + str(job_number).zfill(fill)
+            job_number += 1
+        else:
+            jobname = safe_filename(raw_jobname)
+
+        #######################################
+        # check if job has already finished
+        #######################################
+        # In the colab version and with --zip we know we're done when a zip file has been written
+        result_zip = result_dir.joinpath(jobname).with_suffix(".result.zip")
+        if keep_existing_results and result_zip.is_file():
+            logger.info(f"Skipping {jobname} (result.zip)")
+            continue
+        # In the local version we use a marker file
+        is_done_marker = result_dir.joinpath(jobname + ".done.txt")
+        if keep_existing_results and is_done_marker.is_file():
+            logger.info(f"Skipping {jobname} (already done)")
+            continue
+
+        seq_len = len("".join(query_sequence))
+        logger.info(f"Query {job_number + 1}/{len(queries)}: {jobname} (length {seq_len})")
+
+        ###########################################
+        # generate MSA (a3m_lines) and templates
+        ###########################################
+        try:
+            pickled_msa_and_templates = result_dir.joinpath(f"{jobname}.pickle")
+            if pickled_msa_and_templates.is_file():
+                with open(pickled_msa_and_templates, 'rb') as f:
+                    (unpaired_msa, paired_msa, query_seqs_unique, query_seqs_cardinality, template_features) = pickle.load(f)
+                logger.info(f"Loaded {pickled_msa_and_templates}")
+
+            else:
+                if a3m_lines is None:
+                    (unpaired_msa, paired_msa, query_seqs_unique, query_seqs_cardinality, template_features) \
+                    = get_msa_and_templates(jobname, query_sequence, a3m_lines, result_dir, msa_mode, use_templates,
+                        custom_template_path, pair_mode, pairing_strategy, host_url, user_agent)
+
+                elif a3m_lines is not None:
+                    (unpaired_msa, paired_msa, query_seqs_unique, query_seqs_cardinality, template_features) \
+                    = unserialize_msa(a3m_lines, query_sequence)
+                    if use_templates:
+                        (_, _, _, _, template_features) \
+                            = get_msa_and_templates(jobname, query_seqs_unique, unpaired_msa, result_dir, 'single_sequence', use_templates,
+                                custom_template_path, pair_mode, pairing_strategy, host_url, user_agent)
+
+                if num_models == 0:
+                    with open(pickled_msa_and_templates, 'wb') as f:
+                        pickle.dump((unpaired_msa, paired_msa, query_seqs_unique, query_seqs_cardinality, template_features), f)
+                    logger.info(f"Saved {pickled_msa_and_templates}")
+
+            # save a3m
+            msa = msa_to_str(unpaired_msa, paired_msa, query_seqs_unique, query_seqs_cardinality)
+            result_dir.joinpath(f"{jobname}.a3m").write_text(msa)
+
+        except Exception as e:
+            logger.exception(f"Could not get MSA/templates for {jobname}: {e}")
+            continue
+
+        #######################
+        # generate features
+        #######################
+        try:
+            (feature_dict, domain_names) \
+            = generate_input_feature(query_seqs_unique, query_seqs_cardinality, unpaired_msa, paired_msa,
+                                     template_features, is_complex, model_type, max_seq=max_seq)
+
+            # save features
+            feature_dict_file = result_dir.joinpath(f"{jobname}_features.pkl")
+            with open(feature_dict_file, 'wb') as f:
+                pickle.dump(feature_dict, f, protocol=4)
+            logger.info(f"Saved {feature_dict_file}")
+            # to allow display of MSA info during colab/chimera run (thanks tomgoddard)
+            if feature_dict_callback is not None:
+                feature_dict_callback(feature_dict)
+
+        except Exception as e:
+            logger.exception(f"Could not generate input features {jobname}: {e}")
+            continue
+
+    #     ###############
+    #     # save plots not requiring prediction
+    #     ###############
+
+    #     result_files = []
+
+    #     # make msa plot
+    #     msa_plot = plot_msa_v2(feature_dict, dpi=dpi)
+    #     coverage_png = result_dir.joinpath(f"{jobname}_coverage.png")
+    #     msa_plot.savefig(str(coverage_png), bbox_inches='tight')
+    #     msa_plot.close()
+    #     result_files.append(coverage_png)
+
+    #     if use_templates:
+    #         templates_file = result_dir.joinpath(f"{jobname}_template_domain_names.json")
+    #         templates_file.write_text(json.dumps(domain_names))
+    #         result_files.append(templates_file)
+
+    #     result_files.append(result_dir.joinpath(jobname + ".a3m"))
+    #     result_files += [bibtex_file, config_out_file]
+
+    #     ######################
+    #     # predict structures
+    #     ######################
+    #     if num_models > 0:
+    #         try:
+    #             # get list of lengths
+    #             query_sequence_len_array = sum([[len(x)] * y
+    #                 for x,y in zip(query_seqs_unique, query_seqs_cardinality)],[])
+
+    #             # decide how much to pad (to avoid recompiling)
+    #             if seq_len > pad_len:
+    #                 if isinstance(recompile_padding, float):
+    #                     pad_len = math.ceil(seq_len * recompile_padding)
+    #                 else:
+    #                     pad_len = seq_len + recompile_padding
+    #                 pad_len = min(pad_len, max_len)
+
+    #             # prep model and params
+    #             if first_job:
+    #                 # if one job input adjust max settings
+    #                 if len(queries) == 1 and msa_mode != "single_sequence":
+    #                     # get number of sequences
+    #                     if "msa_mask" in feature_dict:
+    #                         num_seqs = int(sum(feature_dict["msa_mask"].max(-1) == 1))
+    #                     else:
+    #                         num_seqs = int(len(feature_dict["msa"]))
+
+    #                     if use_templates: num_seqs += 4
+
+    #                     # adjust max settings
+    #                     max_seq = min(num_seqs, max_seq)
+    #                     max_extra_seq = max(min(num_seqs - max_seq, max_extra_seq), 1)
+    #                     logger.info(f"Setting max_seq={max_seq}, max_extra_seq={max_extra_seq}")
+
+    #                 model_runner_and_params = load_models_and_params(
+    #                     num_models=num_models,
+    #                     use_templates=use_templates,
+    #                     num_recycles=num_recycles,
+    #                     num_ensemble=num_ensemble,
+    #                     model_order=model_order,
+    #                     model_type=model_type,
+    #                     data_dir=data_dir,
+    #                     stop_at_score=stop_at_score,
+    #                     rank_by=rank_by,
+    #                     use_dropout=use_dropout,
+    #                     max_seq=max_seq,
+    #                     max_extra_seq=max_extra_seq,
+    #                     use_cluster_profile=use_cluster_profile,
+    #                     recycle_early_stop_tolerance=recycle_early_stop_tolerance,
+    #                     use_fuse=use_fuse,
+    #                     use_bfloat16=use_bfloat16,
+    #                     save_all=save_all,
+    #                     calc_extra_ptm=calc_extra_ptm
+    #                 )
+    #                 first_job = False
+
+    #             results = predict_structure(
+    #                 prefix=jobname,
+    #                 result_dir=result_dir,
+    #                 feature_dict=feature_dict,
+    #                 is_complex=is_complex,
+    #                 use_templates=use_templates,
+    #                 sequences_lengths=query_sequence_len_array,
+    #                 pad_len=pad_len,
+    #                 model_type=model_type,
+    #                 model_runner_and_params=model_runner_and_params,
+    #                 num_relax=num_relax,
+    #                 relax_max_iterations=relax_max_iterations,
+    #                 relax_tolerance=relax_tolerance,
+    #                 relax_stiffness=relax_stiffness,
+    #                 relax_max_outer_iterations=relax_max_outer_iterations,
+    #                 rank_by=rank_by,
+    #                 stop_at_score=stop_at_score,
+    #                 prediction_callback=prediction_callback,
+    #                 use_gpu_relax=use_gpu_relax,
+    #                 random_seed=random_seed,
+    #                 num_seeds=num_seeds,
+    #                 save_all=save_all,
+    #                 save_single_representations=save_single_representations,
+    #                 save_pair_representations=save_pair_representations,
+    #                 save_recycles=save_recycles,
+    #                 calc_extra_ptm=calc_extra_ptm,
+    #                 use_probs_extra=use_probs_extra,
+    #             )
+                
+    #             result_files += results["result_files"]
+    #             ranks.append(results["rank"])
+    #             metrics.append(results["metric"])
+
+    #         except RuntimeError as e:
+    #             # This normally happens on OOM. TODO: Filter for the specific OOM error message
+    #             logger.error(f"Could not predict {jobname}. Not Enough GPU memory? {e}")
+    #             continue
+
+    #         ###############
+    #         # save prediction plots
+    #         ###############
+
+    #         # load the scores
+    #         scores = []
+    #         for r in results["rank"][:5]:
+    #             scores_file = result_dir.joinpath(f"{jobname}_scores_{r}.json")
+    #             with scores_file.open("r") as handle:
+    #                 scores.append(json.load(handle))
+
+    #         # write alphafold-db format (pAE)
+    #         if "pae" in scores[0]:
+    #             af_pae_file = result_dir.joinpath(f"{jobname}_predicted_aligned_error_v1.json")
+    #             af_pae_file.write_text(json.dumps({
+    #                 "predicted_aligned_error":scores[0]["pae"],
+    #                 "max_predicted_aligned_error":scores[0]["max_pae"]}))
+    #             result_files.append(af_pae_file)
+
+    #             # make pAE plots
+    #             paes_plot = plot_paes([np.asarray(x["pae"]) for x in scores],
+    #                 Ls=query_sequence_len_array, dpi=dpi)
+    #             pae_png = result_dir.joinpath(f"{jobname}_pae.png")
+    #             paes_plot.savefig(str(pae_png), bbox_inches='tight')
+    #             paes_plot.close()
+    #             result_files.append(pae_png)
+
+    #             # make pairwise interface metric plots and chainwise ptm plot
+    #             if calc_extra_ptm:
+    #                 ext_metric_png = result_dir.joinpath(f"{jobname}_ext_metrics.png")
+    #                 extra_ptm.plot_chain_pairwise_analysis(scores, fig_path=ext_metric_png)
+
+    #         # make pLDDT plot
+    #         plddt_plot = plot_plddts([np.asarray(x["plddt"]) for x in scores],
+    #             Ls=query_sequence_len_array, dpi=dpi)
+    #         plddt_png = result_dir.joinpath(f"{jobname}_plddt.png")
+    #         plddt_plot.savefig(str(plddt_png), bbox_inches='tight')
+    #         plddt_plot.close()
+    #         result_files.append(plddt_png)
+
+    #     if zip_results:
+    #         with zipfile.ZipFile(result_zip, "w") as result_zip:
+    #             for file in result_files:
+    #                 result_zip.write(file, arcname=file.name)
+
+    #         # Delete only after the zip was successful, and also not the bibtex and config because we need those again
+    #         for file in result_files:
+    #             if file != bibtex_file and file != config_out_file:
+    #                 file.unlink()
+    #     else:
+    #         if num_models > 0:
+    #             is_done_marker.touch()
+
+    # logger.info("Done")
+    # return {"rank":ranks,"metric":metrics}
+
 def run(
     queries: List[Tuple[str, Union[str, List[str]], Optional[List[str]]]],
     result_dir: Union[str, Path],
@@ -1519,469 +1983,6 @@ def run(
             # to allow display of MSA info during colab/chimera run (thanks tomgoddard)
             if feature_dict_callback is not None:
                 feature_dict_callback(feature_dict)
-
-        except Exception as e:
-            logger.exception(f"Could not generate input features {jobname}: {e}")
-            continue
-
-        ###############
-        # save plots not requiring prediction
-        ###############
-
-        result_files = []
-
-        # make msa plot
-        msa_plot = plot_msa_v2(feature_dict, dpi=dpi)
-        coverage_png = result_dir.joinpath(f"{jobname}_coverage.png")
-        msa_plot.savefig(str(coverage_png), bbox_inches='tight')
-        msa_plot.close()
-        result_files.append(coverage_png)
-
-        if use_templates:
-            templates_file = result_dir.joinpath(f"{jobname}_template_domain_names.json")
-            templates_file.write_text(json.dumps(domain_names))
-            result_files.append(templates_file)
-
-        result_files.append(result_dir.joinpath(jobname + ".a3m"))
-        result_files += [bibtex_file, config_out_file]
-
-        ######################
-        # predict structures
-        ######################
-        if num_models > 0:
-            try:
-                # get list of lengths
-                query_sequence_len_array = sum([[len(x)] * y
-                    for x,y in zip(query_seqs_unique, query_seqs_cardinality)],[])
-
-                # decide how much to pad (to avoid recompiling)
-                if seq_len > pad_len:
-                    if isinstance(recompile_padding, float):
-                        pad_len = math.ceil(seq_len * recompile_padding)
-                    else:
-                        pad_len = seq_len + recompile_padding
-                    pad_len = min(pad_len, max_len)
-
-                # prep model and params
-                if first_job:
-                    # if one job input adjust max settings
-                    if len(queries) == 1 and msa_mode != "single_sequence":
-                        # get number of sequences
-                        if "msa_mask" in feature_dict:
-                            num_seqs = int(sum(feature_dict["msa_mask"].max(-1) == 1))
-                        else:
-                            num_seqs = int(len(feature_dict["msa"]))
-
-                        if use_templates: num_seqs += 4
-
-                        # adjust max settings
-                        max_seq = min(num_seqs, max_seq)
-                        max_extra_seq = max(min(num_seqs - max_seq, max_extra_seq), 1)
-                        logger.info(f"Setting max_seq={max_seq}, max_extra_seq={max_extra_seq}")
-
-                    model_runner_and_params = load_models_and_params(
-                        num_models=num_models,
-                        use_templates=use_templates,
-                        num_recycles=num_recycles,
-                        num_ensemble=num_ensemble,
-                        model_order=model_order,
-                        model_type=model_type,
-                        data_dir=data_dir,
-                        stop_at_score=stop_at_score,
-                        rank_by=rank_by,
-                        use_dropout=use_dropout,
-                        max_seq=max_seq,
-                        max_extra_seq=max_extra_seq,
-                        use_cluster_profile=use_cluster_profile,
-                        recycle_early_stop_tolerance=recycle_early_stop_tolerance,
-                        use_fuse=use_fuse,
-                        use_bfloat16=use_bfloat16,
-                        save_all=save_all,
-                        calc_extra_ptm=calc_extra_ptm
-                    )
-                    first_job = False
-
-                results = predict_structure(
-                    prefix=jobname,
-                    result_dir=result_dir,
-                    feature_dict=feature_dict,
-                    is_complex=is_complex,
-                    use_templates=use_templates,
-                    sequences_lengths=query_sequence_len_array,
-                    pad_len=pad_len,
-                    model_type=model_type,
-                    model_runner_and_params=model_runner_and_params,
-                    num_relax=num_relax,
-                    relax_max_iterations=relax_max_iterations,
-                    relax_tolerance=relax_tolerance,
-                    relax_stiffness=relax_stiffness,
-                    relax_max_outer_iterations=relax_max_outer_iterations,
-                    rank_by=rank_by,
-                    stop_at_score=stop_at_score,
-                    prediction_callback=prediction_callback,
-                    use_gpu_relax=use_gpu_relax,
-                    random_seed=random_seed,
-                    num_seeds=num_seeds,
-                    save_all=save_all,
-                    save_single_representations=save_single_representations,
-                    save_pair_representations=save_pair_representations,
-                    save_recycles=save_recycles,
-                    calc_extra_ptm=calc_extra_ptm,
-                    use_probs_extra=use_probs_extra,
-                )
-                
-                result_files += results["result_files"]
-                ranks.append(results["rank"])
-                metrics.append(results["metric"])
-
-            except RuntimeError as e:
-                # This normally happens on OOM. TODO: Filter for the specific OOM error message
-                logger.error(f"Could not predict {jobname}. Not Enough GPU memory? {e}")
-                continue
-
-            ###############
-            # save prediction plots
-            ###############
-
-            # load the scores
-            scores = []
-            for r in results["rank"][:5]:
-                scores_file = result_dir.joinpath(f"{jobname}_scores_{r}.json")
-                with scores_file.open("r") as handle:
-                    scores.append(json.load(handle))
-
-            # write alphafold-db format (pAE)
-            if "pae" in scores[0]:
-                af_pae_file = result_dir.joinpath(f"{jobname}_predicted_aligned_error_v1.json")
-                af_pae_file.write_text(json.dumps({
-                    "predicted_aligned_error":scores[0]["pae"],
-                    "max_predicted_aligned_error":scores[0]["max_pae"]}))
-                result_files.append(af_pae_file)
-
-                # make pAE plots
-                paes_plot = plot_paes([np.asarray(x["pae"]) for x in scores],
-                    Ls=query_sequence_len_array, dpi=dpi)
-                pae_png = result_dir.joinpath(f"{jobname}_pae.png")
-                paes_plot.savefig(str(pae_png), bbox_inches='tight')
-                paes_plot.close()
-                result_files.append(pae_png)
-
-                # make pairwise interface metric plots and chainwise ptm plot
-                if calc_extra_ptm:
-                    ext_metric_png = result_dir.joinpath(f"{jobname}_ext_metrics.png")
-                    extra_ptm.plot_chain_pairwise_analysis(scores, fig_path=ext_metric_png)
-
-            # make pLDDT plot
-            plddt_plot = plot_plddts([np.asarray(x["plddt"]) for x in scores],
-                Ls=query_sequence_len_array, dpi=dpi)
-            plddt_png = result_dir.joinpath(f"{jobname}_plddt.png")
-            plddt_plot.savefig(str(plddt_png), bbox_inches='tight')
-            plddt_plot.close()
-            result_files.append(plddt_png)
-
-        if zip_results:
-            with zipfile.ZipFile(result_zip, "w") as result_zip:
-                for file in result_files:
-                    result_zip.write(file, arcname=file.name)
-
-            # Delete only after the zip was successful, and also not the bibtex and config because we need those again
-            for file in result_files:
-                if file != bibtex_file and file != config_out_file:
-                    file.unlink()
-        else:
-            if num_models > 0:
-                is_done_marker.touch()
-
-    logger.info("Done")
-    return {"rank":ranks,"metric":metrics}
-
-def run_generate_features(
-    queries: List[Tuple[str, Union[str, List[str]], Optional[List[str]]]],
-    result_dir: Union[str, Path],
-    num_models: int,
-    is_complex: bool,
-    num_recycles: Optional[int] = None,
-    recycle_early_stop_tolerance: Optional[float] = None,
-    model_order: List[int] = [1,2,3,4,5],
-    num_ensemble: int = 1,
-    model_type: str = "auto",
-    msa_mode: str = "mmseqs2_uniref_env",
-    use_templates: bool = False,
-    custom_template_path: str = None,
-    num_relax: int = 0,
-    relax_max_iterations: int = 0,
-    relax_tolerance: float = 2.39,
-    relax_stiffness: float = 10.0,
-    relax_max_outer_iterations: int = 3,
-    keep_existing_results: bool = True,
-    rank_by: str = "auto",
-    pair_mode: str = "unpaired_paired",
-    pairing_strategy: str = "greedy",
-    data_dir: Union[str, Path] = default_data_dir,
-    host_url: str = DEFAULT_API_SERVER,
-    user_agent: str = "",
-    random_seed: int = 0,
-    num_seeds: int = 1,
-    recompile_padding: Union[int, float] = 10,
-    zip_results: bool = False,
-    prediction_callback: Callable[[Any, Any, Any, Any, Any], Any] = None,
-    save_single_representations: bool = False,
-    save_pair_representations: bool = False,
-    jobname_prefix: Optional[str] = None,
-    save_all: bool = False,
-    save_recycles: bool = False,
-    use_dropout: bool = False,
-    use_gpu_relax: bool = False,
-    stop_at_score: float = 100,
-    dpi: int = 200,
-    max_seq: Optional[int] = None,
-    max_extra_seq: Optional[int] = None,
-    pdb_hit_file: Optional[Path] = None,
-    local_pdb_path: Optional[Path] = None,
-    use_cluster_profile: bool = True,
-    feature_dict_callback: Callable[[Any], Any] = None,
-    calc_extra_ptm: bool = False,
-    use_probs_extra: bool = True,
-    **kwargs
-):
-    # check what device is available
-    # try:
-    #     # check if TPU is available
-    #     import jax.tools.colab_tpu
-    #     jax.tools.colab_tpu.setup_tpu()
-    #     logger.info('Running on TPU')
-    #     DEVICE = "tpu"
-    #     use_gpu_relax = False
-    # except:
-    #     if jax.local_devices()[0].platform == 'cpu':
-    #         logger.info("WARNING: no GPU detected, will be using CPU")
-    #         DEVICE = "cpu"
-    #         use_gpu_relax = False
-    #     else:
-    #         import tensorflow as tf
-    #         tf.get_logger().setLevel(logging.ERROR)
-    #         logger.info('Running on GPU')
-    #         DEVICE = "gpu"
-    #         # disable GPU on tensorflow
-    #         tf.config.set_visible_devices([], 'GPU')
-
-    from alphafold.notebooks.notebook_utils import get_pae_json
-    from colabfold.alphafold.models import load_models_and_params
-    from colabfold.colabfold import plot_paes, plot_plddts
-    from colabfold.plot import plot_msa_v2
-
-    data_dir = Path(data_dir)
-    result_dir = Path(result_dir)
-    result_dir.mkdir(exist_ok=True)
-    model_type = set_model_type(is_complex, model_type)
-
-    # backward-compatibility with old options
-    old_names = {"MMseqs2 (UniRef+Environmental)":"mmseqs2_uniref_env",
-                 "MMseqs2 (UniRef+Environmental+Env. Pairing)":"mmseqs2_uniref_env_envpair",
-                 "MMseqs2 (UniRef only)":"mmseqs2_uniref",
-                 "unpaired+paired":"unpaired_paired"}
-    msa_mode   = old_names.get(msa_mode,msa_mode)
-    pair_mode  = old_names.get(pair_mode,pair_mode)
-    feature_dict_callback = kwargs.pop("input_features_callback", feature_dict_callback)
-    use_dropout           = kwargs.pop("training", use_dropout)
-    use_fuse              = kwargs.pop("use_fuse", True)
-    use_bfloat16          = kwargs.pop("use_bfloat16", True)
-    max_msa               = kwargs.pop("max_msa",None)
-    if max_msa is not None:
-        max_seq, max_extra_seq = [int(x) for x in max_msa.split(":")]
-
-    if kwargs.pop("use_amber", False) and num_relax == 0:
-        num_relax = num_models * num_seeds
-
-    if len(kwargs) > 0:
-        print(f"WARNING: the following options are not being used: {kwargs}")
-
-    # decide how to rank outputs
-    if rank_by == "auto":
-        rank_by = "multimer" if is_complex else "plddt"
-    if "ptm" not in model_type and "multimer" not in model_type:
-        rank_by = "plddt"
-
-    # added for actifptm calculation
-    if not is_complex and calc_extra_ptm:
-        logger.info("Calculating extra pTM is not supported for single chain prediction, skipping it.")
-        calc_extra_ptm = False
-
-    # get max length
-    max_len = 0
-    max_num = 0
-    for _, query_sequence, _ in queries:
-        N = 1 if isinstance(query_sequence,str) else len(query_sequence)
-        L = len("".join(query_sequence))
-        if L > max_len: max_len = L
-        if N > max_num: max_num = N
-
-    # get max sequences
-    # 512 5120 = alphafold_ptm (models 1,3,4)
-    # 512 1024 = alphafold_ptm (models 2,5)
-    # 508 2048 = alphafold-multimer_v3 (models 1,2,3)
-    # 508 1152 = alphafold-multimer_v3 (models 4,5)
-    # 252 1152 = alphafold-multimer_v[1,2]
-
-    set_if = lambda x,y: y if x is None else x
-    if model_type in ["alphafold2_multimer_v1","alphafold2_multimer_v2"]:
-        (max_seq, max_extra_seq) = (set_if(max_seq,252), set_if(max_extra_seq,1152))
-    elif model_type == "alphafold2_multimer_v3":
-        (max_seq, max_extra_seq) = (set_if(max_seq,508), set_if(max_extra_seq,2048))
-    else:
-        (max_seq, max_extra_seq) = (set_if(max_seq,512), set_if(max_extra_seq,5120))
-
-    if msa_mode == "single_sequence":
-        num_seqs = 1
-        if is_complex and "multimer" not in model_type: num_seqs += max_num
-        if use_templates: num_seqs += 4
-        max_seq = min(num_seqs, max_seq)
-        max_extra_seq = max(min(num_seqs - max_seq, max_extra_seq), 1)
-
-    # sort model order
-    model_order.sort()
-
-    # Record the parameters of this run
-    config = {
-        "num_queries": len(queries),
-        "use_templates": use_templates,
-        "num_relax": num_relax,
-        "relax_max_iterations": relax_max_iterations,
-        "relax_tolerance": relax_tolerance,
-        "relax_stiffness": relax_stiffness,
-        "relax_max_outer_iterations": relax_max_outer_iterations,
-        "msa_mode": msa_mode,
-        "model_type": model_type,
-        "num_models": num_models,
-        "num_recycles": num_recycles,
-        "recycle_early_stop_tolerance": recycle_early_stop_tolerance,
-        "num_ensemble": num_ensemble,
-        "model_order": model_order,
-        "keep_existing_results": keep_existing_results,
-        "rank_by": rank_by,
-        "max_seq": max_seq,
-        "max_extra_seq": max_extra_seq,
-        "pair_mode": pair_mode,
-        "pairing_strategy": pairing_strategy,
-        "host_url": host_url,
-        "user_agent": user_agent,
-        "stop_at_score": stop_at_score,
-        "random_seed": random_seed,
-        "num_seeds": num_seeds,
-        "recompile_padding": recompile_padding,
-        "commit": get_commit(),
-        "use_dropout": use_dropout,
-        "use_cluster_profile": use_cluster_profile,
-        "use_fuse": use_fuse,
-        "use_bfloat16": use_bfloat16,
-        "version": importlib_metadata.version("colabfold"),
-        "calc_extra_ptm": calc_extra_ptm,
-        "use_probs_extra": use_probs_extra,
-    }
-    config_out_file = result_dir.joinpath("config.json")
-    config_out_file.write_text(json.dumps(config, indent=4))
-    use_env = "env" in msa_mode
-    use_msa = "mmseqs2" in msa_mode
-    use_amber = num_models > 0 and num_relax > 0
-
-    bibtex_file = write_bibtex(
-        model_type if num_models > 0 else "", use_msa, use_env, use_templates, use_amber, result_dir
-    )
-
-    if pdb_hit_file is not None:
-        if local_pdb_path is None:
-            raise ValueError("local_pdb_path is not specified.")
-        else:
-            custom_template_path = result_dir / "templates"
-            put_mmciffiles_into_resultdir(pdb_hit_file, local_pdb_path, custom_template_path)
-
-    if custom_template_path is not None:
-        mk_hhsearch_db(custom_template_path)
-
-    pad_len = 0
-    ranks, metrics = [],[]
-    first_job = True
-    job_number = 0
-    for job_number, (raw_jobname, query_sequence, a3m_lines) in enumerate(queries):
-        if jobname_prefix is not None:
-            # pad job number based on number of queries
-            fill = len(str(len(queries)))
-            jobname = safe_filename(jobname_prefix) + "_" + str(job_number).zfill(fill)
-            job_number += 1
-        else:
-            jobname = safe_filename(raw_jobname)
-
-        #######################################
-        # check if job has already finished
-        #######################################
-        # In the colab version and with --zip we know we're done when a zip file has been written
-        result_zip = result_dir.joinpath(jobname).with_suffix(".result.zip")
-        if keep_existing_results and result_zip.is_file():
-            logger.info(f"Skipping {jobname} (result.zip)")
-            continue
-        # In the local version we use a marker file
-        is_done_marker = result_dir.joinpath(jobname + ".done.txt")
-        if keep_existing_results and is_done_marker.is_file():
-            logger.info(f"Skipping {jobname} (already done)")
-            continue
-
-        seq_len = len("".join(query_sequence))
-        logger.info(f"Query {job_number + 1}/{len(queries)}: {jobname} (length {seq_len})")
-
-        ###########################################
-        # generate MSA (a3m_lines) and templates
-        ###########################################
-        try:
-            pickled_msa_and_templates = result_dir.joinpath(f"{jobname}.pickle")
-            if pickled_msa_and_templates.is_file():
-                with open(pickled_msa_and_templates, 'rb') as f:
-                    (unpaired_msa, paired_msa, query_seqs_unique, query_seqs_cardinality, template_features) = pickle.load(f)
-                logger.info(f"Loaded {pickled_msa_and_templates}")
-
-            else:
-                if a3m_lines is None:
-                    (unpaired_msa, paired_msa, query_seqs_unique, query_seqs_cardinality, template_features) \
-                    = get_msa_and_templates(jobname, query_sequence, a3m_lines, result_dir, msa_mode, use_templates,
-                        custom_template_path, pair_mode, pairing_strategy, host_url, user_agent)
-
-                elif a3m_lines is not None:
-                    (unpaired_msa, paired_msa, query_seqs_unique, query_seqs_cardinality, template_features) \
-                    = unserialize_msa(a3m_lines, query_sequence)
-                    if use_templates:
-                        (_, _, _, _, template_features) \
-                            = get_msa_and_templates(jobname, query_seqs_unique, unpaired_msa, result_dir, 'single_sequence', use_templates,
-                                custom_template_path, pair_mode, pairing_strategy, host_url, user_agent)
-
-                if num_models == 0:
-                    with open(pickled_msa_and_templates, 'wb') as f:
-                        pickle.dump((unpaired_msa, paired_msa, query_seqs_unique, query_seqs_cardinality, template_features), f)
-                    logger.info(f"Saved {pickled_msa_and_templates}")
-
-            # save a3m
-            msa = msa_to_str(unpaired_msa, paired_msa, query_seqs_unique, query_seqs_cardinality)
-            result_dir.joinpath(f"{jobname}.a3m").write_text(msa)
-
-        except Exception as e:
-            logger.exception(f"Could not get MSA/templates for {jobname}: {e}")
-            continue
-
-        #######################
-        # generate features
-        #######################
-        try:
-            (feature_dict, domain_names) \
-            = generate_input_feature(query_seqs_unique, query_seqs_cardinality, unpaired_msa, paired_msa,
-                                     template_features, is_complex, model_type, max_seq=max_seq)
-
-            
-            with open(result_dir.joinpath(f"{jobname}_features.pkl"), 'wb'):
-                pickle.dump(feature_dict, f)
-            
-            # to allow display of MSA info during colab/chimera run (thanks tomgoddard)
-            if feature_dict_callback is not None:
-                feature_dict_callback(feature_dict)
-
-            
 
         except Exception as e:
             logger.exception(f"Could not generate input features {jobname}: {e}")
