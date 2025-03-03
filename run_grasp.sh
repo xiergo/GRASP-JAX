@@ -1,6 +1,6 @@
 #!/bin/bash
 
-/lustre/grp/gyqlab/xieyh/app/anaconda3/envs/af2/bin/python /lustre/grp/gyqlab/share/xieyh/grasp_test/grasp_test/GRASP-JAX/run_grasp.py \
+python ./run_grasp.py \
     --rank_by plddt \
     --data_dir /lustre/grp/gyqlab/share/AF2_database \
     --feature_pickle $1 \

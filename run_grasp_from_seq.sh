@@ -9,7 +9,8 @@ reduce_db=${5:-0} # 0 or 1, 0 means using full database (default), 1 means using
 if [ $reduce_db -eq 0 ]; then
 
     echo "Searching for MSA using full database"
-    /lustre/grp/gyqlab/xieyh/app/anaconda3/envs/GRASP/bin/python ./run_grasp.py \
+        # /lustre/grp/gyqlab/xieyh/app/anaconda3/envs/GRASP1/bin/python ./run_grasp.py \
+        python ./run_grasp.py \
         --data_dir /lustre/grp/gyqlab/share/AF2_database \
         --jackhmmer_binary_path /lustre/grp/gyqlab/xieyh/app/hmmer-3.4/hmmer-3.4/bin/jackhmmer \
         --hhblits_binary_path /lustre/grp/gyqlab/xieyh/app/hh-suite/build/bin/hhblits \
@@ -39,7 +40,8 @@ if [ $reduce_db -eq 0 ]; then
         --output_dir $output_dir
 else
     echo "Searching for MSA using reduced database"
-    /lustre/grp/gyqlab/xieyh/app/anaconda3/envs/GRASP/bin/python ./run_grasp.py \
+    # /lustre/grp/gyqlab/xieyh/app/anaconda3/envs/GRASP1/bin/python ./run_grasp.py \
+    python ./run_grasp.py \
         --data_dir /lustre/grp/gyqlab/share/AF2_database \
         --jackhmmer_binary_path /lustre/grp/gyqlab/xieyh/app/hmmer-3.4/hmmer-3.4/bin/jackhmmer \
         --hhblits_binary_path /lustre/grp/gyqlab/xieyh/app/hh-suite/build/bin/hhblits \

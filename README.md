@@ -33,15 +33,34 @@ To install GRASP-JAX, follow these steps:
    ```bash
    conda create -n GRASP python=3.9
    conda activate GRASP
+   ```
 
 4. Install the necessary packages:
    ```
    pip install -r requirements.txt
+   pip install -U "jax[cuda12]" # need to check your CUDA version, this will install the correct version of jaxlib and jax
    conda install -c conda-forge pdbfixer
    ```
 
-
   The installation takes ~10 minutes.
+
+5. Install MSA & Template Search Tools
+To enable multiple sequence alignment (MSA) and template searching, ensure you have the following tools installed:
+
+*   [HH Suite](https://github.com/soedinglab/hh-suite): hhblits hhsearch
+*   [HMMER Suite](http://eddylab.org/software/hmmer): jackhmmer hmmsearch hmmbuild
+*   [Kalign](https://msa.sbc.su.se/cgi-bin/msa.cgi): kalign
+
+If these tools are already installed on your system, you can skip this step. Otherwise, install them using your preferred package manager or source compilation.
+
+To verify installation, run:
+
+    ```bash
+    which hhblits hhsearch jackhmmer hmmsearch hmmbuild kalign
+    ```
+
+If any of these tools are missing, refer to their respective documentation for installation instructions.
+  
   
 ## GRASP Restraints File Preparation
 
