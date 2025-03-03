@@ -11,8 +11,8 @@ from pathlib import Path
 from colabfold.utils import setup_logging
 from colabfold.batch import get_queries
 from colabfold.batch import my_run as run
-from colabfold.plot import plot_msa_v2
-from colabfold.colabfold import plot_protein
+# from colabfold.plot import plot_msa_v2
+# from colabfold.colabfold import plot_protein
 import matplotlib.pyplot as plt
 
 def search_features_colab(fasta_path, outdir):
@@ -154,20 +154,20 @@ def search_features_colab(fasta_path, outdir):
   
 
   use_amber=False
-  def input_features_callback(input_features):
-    if display_images:
-      plot_msa_v2(input_features)
-      plt.show()
-      plt.close()
+  # def input_features_callback(input_features):
+  #   if display_images:
+  #     plot_msa_v2(input_features)
+  #     plt.show()
+  #     plt.close()
 
-  def prediction_callback(protein_obj, length,
-                          prediction_result, input_features, mode):
-    model_name, relaxed = mode
-    if not relaxed:
-      if display_images:
-        fig = plot_protein(protein_obj, Ls=length, dpi=150)
-        plt.show()
-        plt.close()
+  # def prediction_callback(protein_obj, length,
+  #                         prediction_result, input_features, mode):
+  #   model_name, relaxed = mode
+  #   if not relaxed:
+  #     if display_images:
+  #       fig = plot_protein(protein_obj, Ls=length, dpi=150)
+  #       plt.show()
+  #       plt.close()
 
   result_dir = outdir
   log_filename = os.path.join(jobname,"log.txt")
@@ -204,13 +204,13 @@ def search_features_colab(fasta_path, outdir):
       pair_mode=pair_mode,
       pairing_strategy=pairing_strategy,
       stop_at_score=float(100),
-      prediction_callback=prediction_callback,
+      prediction_callback=None,
       dpi=dpi,
       zip_results=False,
       save_all=save_all,
       max_msa=max_msa,
       use_cluster_profile=use_cluster_profile,
-      input_features_callback=input_features_callback,
+      input_features_callback=None,
       save_recycles=save_recycles,
       user_agent="colabfold/google-colab-main",
       calc_extra_ptm=calc_extra_ptm,
