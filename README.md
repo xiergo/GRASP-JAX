@@ -271,7 +271,7 @@ python run_grasp.py \
      * 'ViolNum': number of major violations (exceeding a cutoff of 5Å) of restraints at the end of this iteration,
      * 'MaxViolDist': maximum violation distance of restraints at the end of this iteration.
 
-## Integrated modeling with Combift
+## Integrated modeling with Combfit
 
 This section demonstrates how to integrate Combfit into GRASP to refine protein complex models using cryo-EM data. Before running GRASP with Combfit, you must install [**powerfit3**](https://github.com/xinyuduchem/Powerfit3). After installation, you can run the integrated pipeline with a single command, for example:
 ```bash
@@ -289,6 +289,7 @@ bash run_grasp_w_em.sh \
     -g
 ```
 In this example, GRASP leverages AlphaFold predictions alongside cryo-EM density maps through Combfit’s fitting algorithms, allowing for more accurate and robust structural modeling of protein complexes.
+The output score.csv records the satisfaction for RPRs/IRs and density map.
 
 ## Dataset in GRASP paper
 
