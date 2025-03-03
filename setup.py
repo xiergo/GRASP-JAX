@@ -6,7 +6,7 @@ setup(
     long_description="Integrating Diverse Experimental Information to Assist Protein Complex Structure Prediction",
     long_description_content_type='text/markdown',
     packages=find_packages(),
-    install_requires=['py3Dmol','absl-py==1.0.0','biopython==1.79', 'jax==0.4.30', 'jablib==0.4.30', 'tensorflow-cpu==2.13.1'
+    install_requires=['py3Dmol','absl-py==1.0.0','biopython==1.79', 'jax==0.4.30', 'jablib==0.4.30', 'tensorflow-cpu==2.13.1',
                       'chex==0.1.86','dm-haiku==0.0.12','dm-tree==0.1.8',
                       'immutabledict==2.0.0','ml-collections==0.1.0',
                       'numpy==1.24.3','pandas==2.0.3','scipy==1.11.1',
