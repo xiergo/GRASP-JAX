@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Optional
 
 from absl import logging as absl_logging
-from importlib_metadata import distribution
+# from importlib_metadata import distribution
 from tqdm import TqdmExperimentalWarning
 
 NO_GPU_FOUND = """ERROR: Jax could not find GPU. This can be either because your machine doesn't have a GPU
