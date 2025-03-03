@@ -650,7 +650,48 @@ class Combfit_heteoligomer(Combfit):
         best_score, structure = self.ranking_structure_heteoligomer(total_space, combfitter_list)
         best_structure_path = os.path.join(self.output_path, f'{self.pdb_name_used}_best_structure.pdb')
         structure.tofile(best_structure_path)
+      
+def evaluate(mrc_path,resolution,template):
+    powerfit_prefix = os.environ["CONDA_PREFIX"] + '/bin/powerfit'
+    tmp_dir = os.path.join(os.path.dirname(template),'tmp')
+    cmd = f"{powerfit_prefix} {mrc_path} {resolution} {template} -d {tmp_dir} -g -a 10 -n 0"
+    solution_path = os.path.join(tmp_dir, 'solutions.out')
+    process = subprocess.Popen(cmd, shell=True)
+    process.communicate()
+    with open(solution_path, 'r') as f:
+        lines = f.readlines()
+    cc = float(lines[1].split()[1])
+    os.system(f'rm -rf tmp_dir')
+    return cc
+# def evaluate(self,eval_path):
+#     powerfit_prefix = os.environ["CONDA_PREFIX"] + '/bin/powerfit'
+#     cmd_tot = []
+#     solution_paths = {}
+#     cc = {}
+#     for file in os.listdir(eval_path):
+#         powerfit_output_path = os.path.join(eval_path, file.split('.')[0])
+#         template = os.path.join(eval_path, file)
+#         cmd = f"{powerfit_prefix} {self.mrc_path} {self.resolution} {template} -d {powerfit_output_path} -p {self.nproc} -a 10 -n 0"
+#         cmd_tot.append(cmd)
+#         solution_paths[os.path.basename(powerfit_output_path)] = os.path.join(powerfit_output_path, 'solutions.out')
+#     with Pool() as p:
+#         p.map(self.run_cmd, cmd_tot)
+#         p.close()
+#         p.join()
+#     for solution in solution_paths:
+#         with open(solution_paths[solution], 'r') as f:
+#             lines = f.readlines()
+#         # key = os.path.basename(os.path.dirname(solution_paths[solution]))
+#         cc = float(lines[1].split()[1])
+#     return cc
         
+        # for index in range(len(self.homomer_chainnum_list)):
+        #     combfitter_list[index].KMeans_clustering_homomer(heteoligomer_files[index])
+        #     total_space.append(combfitter_list[index].get_ranking_combinations(combfitter_list[index].homomer_combined_label))
+        #     labels.append(combfitter_list[index].homomer_combined_label)  
+        # best_score, structure = self.ranking_structure_heteoligomer(total_space, combfitter_list)
+        # best_structure_path = os.path.join(self.output_path, f'{self.pdb_name_used}_best_structure.pdb')
+        # structure.tofile(best_structure_path)  
             
             
                 
@@ -668,7 +709,7 @@ def get_args():
     parser.add_argument('-skip', action='store_true', help='Whether to skip the process of powerfit')
     parser.add_argument('-homomer', action='store_true', help='Whether to use homomer mode of Combfit')
     parser.add_argument('-homomer_num_chains', default=0, type=int, help='Number of homomer chains, needed to be specify when skipped')
-    parser.add_argument('-heteroligomer', action='store_true', help='Whether the target is a heteroligomer').
+    parser.add_argument('-heteroligomer', action='store_true', help='Whether the target is a heteroligomer')
     args = parser.parse_args()
     
     if args.pdb:

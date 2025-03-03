@@ -277,11 +277,12 @@ def predict_structure(
     logging.info('read restraints successfully')
 
   feature_dict.update(restraints)
-  logging.info('Using quick inference')
+  # logging.info('Using quick inference')
   is_complex = True
   unrelaxed_pdbs = {}
   unrelaxed_proteins = {}
   ranking_confidences = {}
+  # recall = {}
   nbdist_ca_thre=5.0
   viol_thre=5.0
   heter = False
@@ -305,16 +306,6 @@ def predict_structure(
     align_density_path = os.path.join(output_dir,'align_density')
     if not os.path.exists(align_density_path):
       os.mkdir(align_density_path)
-    # if np.sum(feature_dict['entity_id'] == 1) == len(feature_dict['entity_id']):
-    #   homomer_chains = feature_dict['asym_id'][-1]
-    #   combfitter = Combfit_homomer(mrc_path = mrc_path, resolution = resolution, name = name, homomer_chains=homomer_chains)
-    # elif feature_dict['entity_id'][-1] < feature_dict['asym_id'][-1]:
-    #   heter = True
-    #   # pdb_paths = heteroligomer_list_construct(args.out)
-    #   combfitter = Combfit_heteoligomer(mrc_path = mrc_path, resolution = resolution, name = name)
-    #   # combfitter.docking_pipeline_heteoligomer()
-    # else:
-    #   combfitter = Combfit(mrc_path = mrc_path, resolution = resolution, name = name)
   num_models = len(model_runners)
   transform_em = 'restraints'
   for model_index, (model_name, model_runner) in enumerate(
@@ -341,49 +332,9 @@ def predict_structure(
       logging.info("%s recycle=%s iter=%s local_iter=%s%s",model_name,recycles,it,num_recycle_cur_iter,print_line)
       num_recycle_cur_iter += 1
       is_continue = True
-      # if (recycles > 0 and result["tol"] < 0.5) or num_recycle_cur_iter >= 4:
-      #     final_atom_mask = result["structure_module"]["final_atom_mask"]
-      #     b_factors = result["plddt"][:, None] * final_atom_mask
-      #     confidence = result["mean_plddt"]
-      #     unrelaxed_protein = protein.from_prediction(
-      #         features=feat,
-      #         result=result, b_factors=b_factors,
-      #         remove_leading_feature_dimension=not model_runner.multimer_mode)
-      #     unrelaxed_pdb_path = os.path.join(output_dir, f'unrelaxed_{model_name}_{it+1}.pdb')
-      #     with open(unrelaxed_pdb_path, 'w') as f:
-      #         f.write(protein.to_pdb(unrelaxed_protein))
-      #     restraints = {i:feat[i] for i in ['sbr','sbr_mask','interface_mask','asym_id']}
-      #     ranking_score = result['ranking_confidence']
-      #     rm_num, break_num, max_nb_dist, recall, recall_conf, viol_num, max_viol_dist = filter_restraints(restraints, restraints0, unrelaxed_protein, nbdist_ca_thre=nbdist_ca_thre, max_rm_ratio=max_rm_ratio, viol_thre=viol_thre, mask_terminal_residues=mask_terminal_residues)
-      #     rest = int(restraints['interface_mask'].sum() + restraints['sbr_mask'].sum()/2)
-      #     for i in ['sbr','sbr_mask','interface_mask','asym_id']:
-      #         feat[i] = restraints[i]
-      #     assert rm_num >=0, rm_num
-      #     mydict = {
-      #       'Iter': it+1,
-      #       'Conf': confidence,
-      #       'RankScore': ranking_score,
-      #       'Total': rm_num+rest,
-      #       'Remove': rm_num,
-      #       'Rest': rest,
-      #       'MaxNbDist': max_nb_dist,
-      #       'BreakNum': break_num,
-      #       'Recall': recall,
-      #       'RecallByConf': recall_conf,
-      #       'Recycle_num': num_recycle_cur_iter,
-      #       'Diff': result['tol'],
-      #       'ViolNum': int(viol_num),
-      #       'MaxViolDist': round(max_viol_dist, 2),
-      #       # 'Time': round(time.time()-t_0, 2)
-      #     }
-      #     mydicts.append(mydict)
-      #     # if (rest <= left_thre) or (rm_num == 0) or (it>=4):
-      #     if it>=4:
-      #         is_continue = False
-      #     # t_0 = time.time()
-      #     it += 1
-      #     num_recycle_cur_iter = 0
-      if ((recycles > 0 and result['tol'] <= 0.5) and num_recycle_cur_iter >= 15) or (num_recycle_cur_iter >= 25):
+      zeros = lambda shape: np.zeros(shape, dtype=np.float16)
+      L = feat["aatype"].shape[0]
+      if ((recycles > 0 and result['tol'] <= 0.3)) or (num_recycle_cur_iter >= 25):
         it += 1
         # num_recycle_cur_iter = 0
         if it > 0  and align_density_path is not None:
@@ -397,10 +348,6 @@ def predict_structure(
           density_work_dir = os.path.join(align_density_path, f'{model_name}_{it}_{num_recycle_cur_iter}')
           if not os.path.exists(density_work_dir):
             os.mkdir(density_work_dir)
-          # combfit_align_output = os.path.join(align_density_path, f'combfit_{model_name}_{it}_{num_recycle_cur_iter}.pdb')
-          # with open(align_density_pdb_path, 'w') as f:
-          #   f.write(protein.to_pdb(unrelaxed_protein))
-          
           restraints = {i:feat[i] for i in ['sbr','sbr_mask','interface_mask','asym_id']}
           rm_num, break_num, max_nb_dist, recall, recall_conf, viol_num, max_viol_dist = filter_restraints(restraints, restraints, unrelaxed_protein, update=False,nbdist_ca_thre=nbdist_ca_thre, max_rm_ratio=max_rm_ratio, viol_thre=viol_thre, mask_terminal_residues=mask_terminal_residues)
           rest = int(restraints['interface_mask'].sum() + restraints['sbr_mask'].sum()/2)
@@ -437,16 +384,16 @@ def predict_structure(
           combfit_align_output = os.path.join(density_work_dir, f'model_best_structure.pdb')
           reorder_combfit_align_output = os.path.join(density_work_dir,f'combfit_{model_name}_best_structure_order.pdb')
           combfit_tmp_align_output = os.path.join(density_work_dir,f'combfit_{model_name}_best_structure_tmp.pdb')
-          combfit_clean_output = os.path.join(density_work_dir,f'combfit_{model_name}_best_structure_clean.pdb')
+          # combfit_clean_output = os.path.join(density_work_dir,f'combfit_{model_name}_best_structure_clean.pdb')
+          combfit_clean_output = os.path.join(output_dir,f'combfit_{model_name}_best_structure_clean.pdb')
           if it==1:
             chains = parse_pdb_chains(reorder_align_density_pdb_path)
             n_groups = np.random.randint(2, len(chains)) 
             grouped_chains = random_group_by_proximity(chains, n_groups)
             residue_mapping = merge_chains_by_group(reorder_align_density_pdb_path, grouped_chains,dock_initial_pdb_path)
-
-            combfit_path = os.path.abspath(combfit_newest.__file__)
-            base_dir= os.path.dirname(combfit_path)
-            pipeline_path = os.path.join(base_dir, 'pipeline_integrate.sh')
+            # combfit_path = os.path.abspath(combfit_newest.__file__)
+            # base_dir= os.path.dirname(combfit_path)
+            # pipeline_path = os.path.join(base_dir, 'pipeline_integrate.sh')
             parse_template.main(dock_initial_pdb_path, 'model', density_work_dir)
             pdb_paths = combfit_newest.heteroligomer_list_construct(density_work_dir)
             combfitter = combfit_newest.Combfit_heteoligomer(mrc_path, resolution, density_work_dir, True, os.cpu_count(), "model", None, False, pdb_paths = pdb_paths)
@@ -465,90 +412,20 @@ def predict_structure(
             restore_chains_from_merge(reorder_combfit_align_output,residue_map,combfit_tmp_align_output)
             reference_sequences = list(get_chain_sequences(reorder_align_density_pdb_path).values())
             reorder_and_renumber_chains(combfit_tmp_align_output,combfit_clean_output, reference_sequences)
-            
-            # os.system(f'python3 alphafold/data/tools/20240710_Combfit_heteoligomer.py -pdb_path {align_density_pdb_path} -mrc_path {mrc_path} -resolution {resolution} -output_path {combfit_align_output}')
-            # renumber_chains(combfit_align_output,combfit_reorder_align_output)
-             # reference_sequences = list(get_chain_sequences(align_density_pdb_path).values())
-            # reorder_and_renumber_chains(combfit_align_output,f'./test_8cx0/group_{i}/combfit_8cx0_{i}_best_structure_reorder.pdb', reference_sequences)
-            # reassign_chain_names(f'./test_8cx0/merge_{i}.pdb',f'./test_8cx0/group_{i}/combfit_8cx0_{i}_best_structure_reorder.pdb',f'./test_8cx0/group_{i}/combfit_8cx0_{i}_best_structure_new.pdb')
-          #   reference_sequences = list(get_chain_sequences(align_density_pdb_path).values())
-          #   reorder_and_renumber_chains(combfit_align_output,combfit_reorder_align_output, reference_sequences)
-          # combfit_reorder_align_output = f'./combfit_dock.pdb'
-          # combfitter.pdb_path = align_density_pdb_path
-          # if heter:
-          #   chain_path = os.path.join(align_density_path, f'{model_name}_{it}_{num_recycle_cur_iter}')
-          #   splitchain(align_density_pdb_path,name,chain_path)
-          #   combfitter.pdb = heteroligomer_list_construct(chain_path)
-          #   combfitter.output_path = chain_path
-          # else:
-          #   combfitter.output_path = align_density_path
-          # combfitter.pdb_name_used = f'combfit_{model_name}_{it}_{num_recycle_cur_iter}'
-          # combfitter.docking_pipeline()
-          # logging.info(f'combfit input %s,%s,%s',align_density_pdb_path,density_work_dir,mrc_path)
-          if it<2:
-            # combfit_reorder_align_output = os.path.join(density_work_dir, f'combfit_{model_name}_{it}_{num_recycle_cur_iter}_best_structure_reorder.pdb')
-            # reorder_align_density_pdb_path = os.path.join(align_density_path, f'{model_name}_{it}_{num_recycle_cur_iter}_reorder.pdb')
-            # renumber_chains(align_density_pdb_path,reorder_align_density_pdb_path)
-            # cmd = f'bash pipeline_integrate.sh {reorder_align_density_pdb_path} {density_work_dir} {resolution} {mrc_path} combfit_{model_name}_{it}_{num_recycle_cur_iter}'
-            # t1 = time.time()
-            # _ = subprocess.run(cmd, shell=True)
-            # # splitchain(align_density_pdb_path,name,f'combfit_{model_name}_{it}_{num_recycle_cur_iter}')
-            # t2 = time.time()
-            # logging.info(f'combfit consume %ds',t2-t1)
-            # combfit_align_output = os.path.join(density_work_dir, f'combfit_{model_name}_{it}_{num_recycle_cur_iter}_best_structure.pdb')
-            # # tmp_align_output = os.path.join(density_work_dir, f'combfit_{model_name}_{it}_{num_recycle_cur_iter}_best_structure_tmp.pdb')
-            # combfit_reorder_align_output = os.path.join(density_work_dir, f'combfit_{model_name}_{it}_{num_recycle_cur_iter}_best_structure_reorder.pdb')
-            # # os.system(f'python3 alphafold/data/tools/20240710_Combfit_heteoligomer.py -pdb_path {align_density_pdb_path} -mrc_path {mrc_path} -resolution {resolution} -output_path {combfit_align_output}')
-            # # renumber_chains(combfit_align_output,combfit_reorder_align_output)
-            # reference_sequences = list(get_chain_sequences(align_density_pdb_path).values())
-            # reorder_and_renumber_chains(combfit_align_output,combfit_reorder_align_output, reference_sequences)
-            # renumber_chains(tmp_align_output,combfit_reorder_align_output)
-            # combfit_align_output = os.path.join(density_work_dir, f'combfit_{model_name}_{it}_{num_recycle_cur_iter}_best_structure.pdb')
-            # with open(combfit_align_output, 'r') as f:
-            #   combfit_pdb = f.readlines()
-            #   protein_strings = ''.join(combfit_pdb)
-            #   combfit_protein = protein.from_pdb_string(protein_strings)
-            #   # replace features with combfit positions
-            
-            # if transform_em == 'replace':
-            #   prev['prev_pos'] = combfit_protein.atom_positions
-            # elif transform_em == 'interpolate':
-            #   interpolate_output = os.path.join(align_density_path, f'interpolate_{model_name}_{it+1}_{num_recycle_cur_iter}.pdb')
-            #   interpolate_structures(combfit_reorder_align_output,align_density_pdb_path,0.2,interpolate_output)
-            #   with open(interpolate_output, 'r') as f:
-            #     protein_strings = ''.join(f.readlines())
-            #     interpolate_protein = protein.from_pdb_string(protein_strings)
-            #   prev['prev_pos'] = interpolate_protein.atom_positions
-            # elif transform_em == 'restraints':
+          # if it<2:
             feat['sbr'],feat['sbr_mask'],feat['interface_mask'] = copy.deepcopy(restraints0['sbr']),copy.deepcopy(restraints0['sbr_mask']),copy.deepcopy(restraints0['interface_mask'])
               # restraints = {i:feat[i] for i in ['sbr','sbr_mask','interface_mask','asym_id']}
-            feat = extract_restraints(align_density_pdb_path,combfit_clean_output,30,feat)
+            feat= extract_restraints(align_density_pdb_path,combfit_clean_output,30,feat)
+            # restraints = {i:feat[i] for i in ['sbr','sbr_mask','interface_mask','asym_id']}
+            # unrelaxed_protein = protein.from_pdb_string(combfit_clean_output)
+            # rm_num, break_num, max_nb_dist, recall, recall_conf, viol_num, max_viol_dist = filter_restraints(restraints, restraints, unrelaxed_protein, update=False,nbdist_ca_thre=nbdist_ca_thre, max_rm_ratio=max_rm_ratio, viol_thre=viol_thre, mask_terminal_residues=mask_terminal_residues)
+            
+            # recall = {'model':model_name,'stage':'combfit','recall':recall,'CC':}
+            prev = {'prev_msa_first_row': zeros([L,256]),
+            'prev_pair': zeros([L,L,128]),
+            'prev_pos':  zeros([L,37,3])}
           else:
             is_continue = False
-            # t_0 = time.time()
-          # restraints = {i:feat[i] for i in ['sbr','sbr_mask','interface_mask','asym_id']}
-          # rm_num, break_num, max_nb_dist, recall, recall_conf, viol_num, max_viol_dist = filter_restraints(restraints, restraints0, unrelaxed_protein, update=False,nbdist_ca_thre=nbdist_ca_thre, max_rm_ratio=max_rm_ratio, viol_thre=viol_thre, mask_terminal_residues=mask_terminal_residues)
-          # rest = int(restraints['interface_mask'].sum() + restraints['sbr_mask'].sum()/2)
-          # ranking_score = result['ranking_confidence']
-          # confidence = result["mean_plddt"]
-          # mydict = {
-          #     'Iter': it,
-          #     'Conf': confidence,
-          #     'RankScore': ranking_score,
-          #     'Total': rm_num+rest,
-          #     'Remove': rm_num,
-          #     'Rest': rest,
-          #     'MaxNbDist': max_nb_dist,
-          #     'BreakNum': break_num,
-          #     'Recall': recall,
-          #     # 'RecallByConf': recall_conf,
-          #     'Recycle_num': num_recycle_cur_iter,
-          #     'Diff': result['tol'],
-          #     'ViolNum': int(viol_num),
-          #     'MaxViolDist': round(max_viol_dist, 2),
-          #     # 'Time': round(time.time()-t_0, 2)
-          #   }
-          # mydicts.append(mydict)
           num_recycle_cur_iter = 0
           del unrelaxed_protein
       return result,feat,it,num_recycle_cur_iter,prev, is_continue,restraints
@@ -575,24 +452,41 @@ def predict_structure(
     unrelaxed_pdb_path = os.path.join(output_dir, f'unrelaxed_{model_name}_final.pdb')
     with open(unrelaxed_pdb_path, 'w') as f:
       f.write(unrelaxed_pdbs[model_name])
-    
-  ranked_order = [
-      model_name for model_name, confidence in
-      sorted(ranking_confidences.items(), key=lambda x: x[1], reverse=True)]
+  
+  score_lst = []
+  for model_index, (model_name, model_runner) in enumerate(
+      model_runners.items()):
+    unrelaxed_combfit_protein_string = os.path.join(output_dir,f'combfit_{model_name}_best_structure_clean.pdb')
+    unrelaxed_combfit_protein = protein.from_pdb_string(open(unrelaxed_combfit_protein_string).read())
+    rm_num, break_num, max_nb_dist, recall, recall_conf, viol_num, max_viol_dist = filter_restraints(restraints0, restraints0, unrelaxed_combfit_protein, update=False,nbdist_ca_thre=nbdist_ca_thre, max_rm_ratio=max_rm_ratio, viol_thre=viol_thre, mask_terminal_residues=mask_terminal_residues)
+    CC = combfit_newest.evaluate(mrc_path,resolution,unrelaxed_combfit_protein_string)
+    score = {'model':model_name,'stage':'combfit','break_num':break_num,'vol_num':viol_num,'recall':recall,'CC':CC} 
+    score_lst.append(score)
+    unrelaxed_final_protein_string = os.path.join(output_dir,f'unrelaxed_{model_name}_final.pdb')
+    unrelaxed_final_protein = protein.from_pdb_string(open(unrelaxed_final_protein_string).read())
+    rm_num, break_num, max_nb_dist, recall, recall_conf, viol_num, max_viol_dist = filter_restraints(restraints0, restraints0, unrelaxed_final_protein, update=False,nbdist_ca_thre=nbdist_ca_thre, max_rm_ratio=max_rm_ratio, viol_thre=viol_thre, mask_terminal_residues=mask_terminal_residues)
+    CC = combfit_newest.evaluate(mrc_path,resolution,unrelaxed_final_protein_string)
+    score = {'model':model_name,'stage':'grasp','break_num':break_num,'vol_num':viol_num,'recall':recall,'CC':CC} 
+    score_lst.append(score)
+  df = pd.DataFrame(score_lst)
+  df.to_csv(os.path.join(output_dir, f'score.csv'),sep='\t',index=False)
+  # ranked_order = [
+  #     model_name for model_name, confidence in
+  #     sorted(ranking_confidences.items(), key=lambda x: x[1], reverse=True)]
 
 
-  for idx, model_name in enumerate(ranked_order):
-    ranked_output_path = os.path.join(output_dir, f'ranked_{idx}.pdb')
-    with open(ranked_output_path, 'w') as f:
-      f.write(unrelaxed_pdbs[model_name])
+  # for idx, model_name in enumerate(ranked_order):
+  #   ranked_output_path = os.path.join(output_dir, f'ranked_{idx}.pdb')
+  #   with open(ranked_output_path, 'w') as f:
+  #     f.write(unrelaxed_pdbs[model_name])
 
-  ranking_output_path = os.path.join(output_dir, 'ranking_debug.json')
-  with open(ranking_output_path, 'w') as f:
-    label = 'iptm+ptm' if 'iptm' in prediction_result else 'plddts'
-    ranking_confidences = {model_name:confidence.tolist() for model_name, confidence in ranking_confidences.items()}
-    # logging.info('ranking_confidences %s',type(ranking_confidences) )
-    f.write(json.dumps(
-        {label: ranking_confidences, 'order': ranked_order}, indent=4))
+  # ranking_output_path = os.path.join(output_dir, 'ranking_debug.json')
+  # with open(ranking_output_path, 'w') as f:
+  #   label = 'iptm+ptm' if 'iptm' in prediction_result else 'plddts'
+  #   ranking_confidences = {model_name:confidence.tolist() for model_name, confidence in ranking_confidences.items()}
+  #   # logging.info('ranking_confidences %s',type(ranking_confidences) )
+  #   f.write(json.dumps(
+  #       {label: ranking_confidences, 'order': ranked_order}, indent=4))
 
 
 def main(argv):

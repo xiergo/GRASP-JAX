@@ -7,6 +7,7 @@ from scipy.spatial.distance import cdist
 import random
 from Bio import PDB
 from sklearn.cluster import KMeans
+from Bio.PDB.Polypeptide import three_to_one
 PDB_CHAIN_IDS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
 
 
@@ -117,12 +118,14 @@ def extract_restraints(ori_pdb,new_pdb,max_1v1,feat):
   distance_pre = cdist(pdb_pre.atom_positions[:,1], pdb_pre.atom_positions[:,1]) + np.eye(pdb_pre.aatype.shape[0]) * 1e3
   # distance_pre_beta = cdist(pdb_post.atom_positions[:,3], pdb_post.atom_positions[:,3]) + np.eye(pdb_post.aatype.shape[0]) * 1e3
   distance_post = cdist(pdb_post.atom_positions[:,1], pdb_post.atom_positions[:,1]) + np.eye(pdb_post.aatype.shape[0]) * 1e3
-  distance_post_beta = cdist(pdb_post.atom_positions[:,3], pdb_post.atom_positions[:,3]) + np.eye(pdb_post.aatype.shape[0]) * 1e3
+#   distance_post_beta = cdist(pdb_post.atom_positions[:,3], pdb_post.atom_positions[:,3]) + np.eye(pdb_post.aatype.shape[0]) * 1e3
   chain_mask = np.zeros_like(distance_pre, dtype=bool)
   chain_mask[(pdb_pre.chain_index[None,:] != pdb_pre.chain_index[:,None])] = 1
   valid_close = chain_mask * (distance_pre - distance_post ) * (distance_post <= 25) * (distance_pre - distance_post >= 10)
-  res_pool_close = np.argsort(valid_close.flatten())[::-1][:min(500,np.sum(valid_close > 0))]
+#   res_pool_close = np.argsort(valid_close.flatten())[::-1][:min(500,np.sum(valid_close > 0))]
+  res_pool_close = np.argsort(valid_close.flatten())[::-1][:np.sum(valid_close > 0)]
   res_pool_close = np.array([np.unravel_index(i, valid_close.shape) for i in res_pool_close])
+#   sample_res = {}
   if len(res_pool_close[0]) != 0:
       sel_res = max_min_sampling(res_pool_close, min(max_1v1,len(res_pool_close)))
       for pair in sel_res:
@@ -130,6 +133,7 @@ def extract_restraints(ori_pdb,new_pdb,max_1v1,feat):
           feat['sbr'][pair[1],pair[0]] = get_distri(distance_post[pair[0],pair[1]])
           feat['sbr_mask'][pair[1],pair[0]] = 1
           feat['sbr_mask'][pair[0],pair[1]] = 1
+        #   sample_res[pair] = distance_post[pair[0],pair[1]]
 #   row,column = np.where((distance_post_beta <= 8) * chain_mask )
 #   interface = np.array([i for i in set(row.tolist() + column.tolist())])
 #   deduplicated_interface = monte_carlo_deduplication(interface, min_diff=3)
@@ -208,12 +212,15 @@ def splitchain(input_file, name, output_dir):
 def get_chain_sequences(pdb_file):
     parser = PDBParser()
     structure = parser.get_structure('structure', pdb_file)
-    ppb = PPBuilder()
     chain_sequences = {}
     for model in structure:
         for chain in model:
-            sequence = ''.join([str(pp.get_sequence()) for pp in ppb.build_peptides(chain)])
-            chain_sequences[chain.id] = sequence
+            sequence = []
+            for residue in chain:
+                resname = residue.get_resname().title()
+                aa = three_to_one(resname.upper())
+                sequence.append(aa)
+            chain_sequences[chain.id] = ''.join(sequence)
     return chain_sequences
 
 def reorder_and_renumber_chains(input_pdb, output_pdb, reference_sequences):
