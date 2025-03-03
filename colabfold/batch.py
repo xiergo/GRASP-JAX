@@ -1974,7 +1974,7 @@ def run_generate_features(
                                      template_features, is_complex, model_type, max_seq=max_seq)
 
             
-            with open(result_dir.joinpath(f"{jobname}_features.pkl"), 'wb')
+            with open(result_dir.joinpath(f"{jobname}_features.pkl"), 'wb'):
                 pickle.dump(feature_dict, f)
             
             # to allow display of MSA info during colab/chimera run (thanks tomgoddard)
