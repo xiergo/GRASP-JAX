@@ -30,30 +30,30 @@ import numpy as np
 import pandas
 
 try:
-    import alphafold_colab
+    import alphafold
 except ModuleNotFoundError:
     raise RuntimeError(
         "\n\nalphafold is not installed. Please run `pip install colabfold[alphafold]`\n"
     )
 
-from alphafold_colab.common import protein, residue_constants
+from alphafold.common import protein, residue_constants
 
 # delay imports of tensorflow, jax and numpy
 # loading these for type checking only can take around 10 seconds just to show a CLI usage message
 if TYPE_CHECKING:
     import haiku
-    from alphafold_colab.model import model
+    from alphafold.model import model
     from numpy import ndarray
 
-from alphafold_colab.common.protein import Protein
-from alphafold_colab.data import (
+from alphafold.common.protein import Protein
+from alphafold.data import (
     feature_processing,
     msa_pairing,
     pipeline,
     pipeline_multimer,
     templates,
 )
-from alphafold_colab.data.tools import hhsearch
+from alphafold.data.tools import hhsearch
 from colabfold.citations import write_bibtex
 from colabfold.download import default_data_dir, download_alphafold_params
 from colabfold.utils import (
@@ -894,7 +894,7 @@ def build_multimer_feature(paired_msa: str) -> Dict[str, ndarray]:
     parsed_paired_msa = pipeline.parsers.parse_a3m(paired_msa)
     return {
         f"{k}_all_seq": v
-        for k, v in pipeline.make_msa_features([parsed_paired_msa]).items()
+        for k, v in pipeline.make_msa_features([parsed_paired_msa], True).items()
     }
 
 def process_multimer_features(
@@ -1310,10 +1310,10 @@ def my_run(
     DEVICE = "cpu"
     use_gpu_relax = False
 
-    from alphafold.notebooks.notebook_utils import get_pae_json
-    from colabfold.alphafold.models import load_models_and_params
-    from colabfold.colabfold import plot_paes, plot_plddts
-    from colabfold.plot import plot_msa_v2
+    # from alphafold.notebooks.notebook_utils import get_pae_json
+    # from colabfold.alphafold.models import load_models_and_params
+    # from colabfold.colabfold import plot_paes, plot_plddts
+    # from colabfold.plot import plot_msa_v2
 
     data_dir = Path(data_dir)
     result_dir = Path(result_dir)

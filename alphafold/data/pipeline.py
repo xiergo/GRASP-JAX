@@ -50,7 +50,7 @@ def make_sequence_features(
   return features
 
 
-def make_msa_features(msas: Sequence[parsers.Msa]) -> FeatureDict:
+def make_msa_features(msas: Sequence[parsers.Msa], is_colab=False) -> FeatureDict:
   """Constructs a feature dict of MSA features."""
   if not msas:
     raise ValueError('At least one MSA must be provided.')
@@ -63,9 +63,10 @@ def make_msa_features(msas: Sequence[parsers.Msa]) -> FeatureDict:
     if not msa:
       raise ValueError(f'MSA {msa_index} must contain at least one sequence.')
     for sequence_index, sequence in enumerate(msa.sequences):
-      if sequence in seen_sequences:
-        continue
-      seen_sequences.add(sequence)
+      if not is_colab:
+        if sequence in seen_sequences:
+          continue
+        seen_sequences.add(sequence)
       int_msa.append(
           [residue_constants.HHBLITS_AA_TO_ID[res] for res in sequence])
       deletion_matrix.append(msa.deletion_matrix[sequence_index])
