@@ -55,7 +55,7 @@ from alphafold.data import (
 )
 from alphafold.data.tools import hhsearch
 from colabfold.citations import write_bibtex
-from colabfold.download import default_data_dir #, download_alphafold_params
+# from colabfold.download import default_data_dir , download_alphafold_params
 from colabfold.utils import (
     # ACCEPT_DEFAULT_TERMS,
     DEFAULT_API_SERVER,
@@ -1260,7 +1260,7 @@ def my_run(
     rank_by: str = "auto",
     pair_mode: str = "unpaired_paired",
     pairing_strategy: str = "greedy",
-    data_dir: Union[str, Path] = default_data_dir,
+    data_dir: Union[str, Path] = 'none',
     host_url: str = DEFAULT_API_SERVER,
     user_agent: str = "",
     random_seed: int = 0,
