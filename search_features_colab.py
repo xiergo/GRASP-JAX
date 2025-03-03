@@ -215,7 +215,7 @@ def search_features_colab(fasta_path, outdir):
       user_agent="colabfold/google-colab-main",
       calc_extra_ptm=calc_extra_ptm,
   )
-  return f'{outdir}/{jobname}_features.pkl'
+  return f'{outdir}/features.pkl'
 
 
 if __name__ == '__main__':

@@ -1519,7 +1519,7 @@ def my_run(
                                      template_features, is_complex, model_type, max_seq=max_seq)
 
             # save features
-            feature_dict_file = result_dir.joinpath(f"{jobname}_features.pkl")
+            feature_dict_file = result_dir.joinpath(f"features.pkl")
             with open(feature_dict_file, 'wb') as f:
                 pickle.dump(feature_dict, f, protocol=4)
             logger.info(f"Saved {feature_dict_file}")
