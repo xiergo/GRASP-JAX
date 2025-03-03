@@ -25,7 +25,7 @@ from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union, TYPE_CHECKING
 from io import StringIO
 
-import importlib_metadata
+# import importlib_metadata
 import numpy as np
 import pandas
 
