@@ -16,18 +16,18 @@ import random
 from tqdm import tqdm
 
 import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib
-import matplotlib.patheffects
-from matplotlib import collections as mcoll
+# import matplotlib.pyplot as plt
+# import matplotlib
+# import matplotlib.patheffects
+# from matplotlib import collections as mcoll
 
 import logging
 logger = logging.getLogger(__name__)
 
-try:
-  import py3Dmol
-except:
-  pass
+# try:
+#   import py3Dmol
+# except:
+#   pass
 
 from string import ascii_uppercase,ascii_lowercase
 
@@ -37,7 +37,7 @@ pymol_color_list = ["#33ff33","#00ffff","#ff33cc","#ffff00","#ff9999","#e5e5e5",
                     "#00ff7f","#337fcc","#d8337f","#bfff3f","#ff7fff","#d8d8ff","#3fffbf","#b78c4c",
                     "#339933","#66b2b2","#ba8c84","#84bf00","#b24c66","#7f7f7f","#3f3fa5","#a5512b"]
 
-pymol_cmap = matplotlib.colors.ListedColormap(pymol_color_list)
+# pymol_cmap = matplotlib.colors.ListedColormap(pymol_color_list)
 alphabet_list = list(ascii_uppercase+ascii_lowercase)
 
 aatypes = set('ACDEFGHIKLMNPQRSTVWY')

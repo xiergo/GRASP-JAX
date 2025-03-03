@@ -13,7 +13,7 @@ from colabfold.batch import get_queries
 from colabfold.batch import my_run as run
 # from colabfold.plot import plot_msa_v2
 # from colabfold.colabfold import plot_protein
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 
 def search_features_colab(fasta_path, outdir):
   with open(fasta_path, "r"):
