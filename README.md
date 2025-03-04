@@ -56,9 +56,10 @@ If these tools are already installed on your system, you can skip this step. Oth
 
 To verify installation, run:
 
-    ```bash
-    which hhblits hhsearch jackhmmer hmmsearch hmmbuild kalign
-    ```
+
+```bash
+which hhblits hhsearch jackhmmer hmmsearch hmmbuild kalign
+```
 
 If any of these tools are missing, refer to their respective documentation for installation instructions.
   
