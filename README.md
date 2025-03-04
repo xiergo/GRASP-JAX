@@ -44,7 +44,8 @@ To install GRASP-JAX, follow these steps:
 
   The installation takes ~10 minutes.
 
-5. Install MSA & Template Search Tools
+5. Install MSA & Template Search Tools:
+   
 To enable multiple sequence alignment (MSA) and template searching, ensure you have the following tools installed:
 
 *   [HH Suite](https://github.com/soedinglab/hh-suite): hhblits hhsearch
