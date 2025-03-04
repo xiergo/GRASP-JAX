@@ -277,7 +277,7 @@ def predict_structure(
   restraints = {'sbr': np.zeros((seq_length, seq_length, len(BINS)+1)).astype(dtype),
     'sbr_mask' : np.zeros((seq_length, seq_length)).astype(dtype),
     'interface_mask': np.zeros(seq_length).astype(dtype)}
-  if os.path.exists(restraints_path):
+  if restraints_path is not None and os.path.exists(restraints_path):
     if restraints_path.endswith('.pkl'):
       restraints_input = pickle.load(open(restraints_path,'rb'))
       logging.info(f'read restraints from {restraints_path} successfully')
@@ -428,10 +428,11 @@ def predict_structure(
         remove_leading_feature_dimension=not model_runner.multimer_mode)
     # Rank by model confidence.
     if FLAGS.rank_by == 'plddt':
-      ranking_confidences[model_name] = prediction_result['mean_plddt'] + (prediction_result['recall']>=0.3)*1000
+      my_recall = prediction_result['recall'] if prediction_result['recall'] is not None else -1
+      ranking_confidences[model_name] = prediction_result['mean_plddt'] + (my_recall>=0.3)*1000
       label = 'plddt+1000*(recall>=0.3)'
     elif FLAGS.rank_by == 'ptm':
-      ranking_confidences[model_name] = prediction_result['ranking_confidence']+(prediction_result['recall']>=0.3)*1000
+      ranking_confidences[model_name] = prediction_result['ranking_confidence']+(my_recall>=0.3)*1000
       label = '0.8*iptm+0.2*ptm+1000*(recall>=0.3)'
     unrelaxed_proteins[model_name] = unrelaxed_protein
     unrelaxed_pdbs[model_name] = protein.to_pdb(unrelaxed_protein)

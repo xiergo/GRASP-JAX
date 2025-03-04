@@ -236,7 +236,7 @@ class RunModel:
       # if not is_continue:
       #   break
 
-    logging.info('Output shape was %s', tree.map_structure(lambda x: x.shape, result))
+    logging.info('Output shape was %s', tree.map_structure(lambda x: x.shape if hasattr(x, "shape") else x, result))
     # logging.info('Early stop at %d iter', r+1)
     return result, r
     
