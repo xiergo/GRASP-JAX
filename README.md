@@ -30,7 +30,7 @@ To install GRASP-JAX, follow these steps:
 
 3. create a conda Enviroment, and activate it:
 
-   ```bash
+   ```
    conda create -n GRASP python=3.9
    conda activate GRASP
    ```
