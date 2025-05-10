@@ -1,0 +1,118 @@
+Warning: importing 'simtk.openmm' is deprecated.  Import 'openmm' instead.
+I0510 09:44:24.496192 139717576767296 xla_bridge.py:889] Unable to initialize backend 'rocm': module 'jaxlib.xla_extension' has no attribute 'GpuAllocatorConfig'
+I0510 09:44:24.651780 139717576767296 xla_bridge.py:889] Unable to initialize backend 'tpu': INTERNAL: Failed to open libtpu.so: libtpu.so: cannot open shared object file: No such file or directory
+2025-05-10 09:44:30.515007: W external/xla/xla/service/gpu/nvptx_compiler.cc:765] The NVIDIA driver's CUDA version is 12.2 which is older than the ptxas CUDA version (12.8.61). Because the driver is older than the ptxas version, XLA is disabling parallel compilation, which may slow down compilation. You should update your NVIDIA driver or use the NVIDIA-provided CUDA forward compatibility packages.
+I0510 09:44:37.124541 139717576767296 run_grasp.py:596] Have 5 models: ['model_1_multimer_v3_v11_8000_pred_0', 'model_1_multimer_v3_v11_14000_pred_0', 'model_1_multimer_v3_v11_20000_pred_0', 'model_1_multimer_v3_v11_22000_pred_0', 'model_1_multimer_v3_v11_22946222_pred_0']
+I0510 09:44:37.124751 139717576767296 run_grasp.py:610] Using random seed 1219775022727136975 for the data pipeline
+I0510 09:44:37.125407 139717576767296 run_grasp.py:268] Reading raw features from ../../GRASP-JAX/examples/7NXX_dimer_A_B/feat.pkl
+I0510 09:44:37.310941 139717576767296 run_grasp.py:283] read restraints from ../../GRASP-JAX/examples/7NXX_dimer_A_B/RPR_restr.pkl successfully
+I0510 09:44:37.327227 139717576767296 run_grasp.py:294] read restraints from ../../GRASP-JAX/examples/7NXX_dimer_A_B/RPR_restr.pkl successfully, including 5 RPR restraints, 0 IR restraints.
+I0510 09:44:37.327543 139717576767296 run_grasp.py:321] Using normal inference
+I0510 09:44:37.327667 139717576767296 run_grasp.py:323] At least 1 restraints will be used in the final iteration
+I0510 09:44:37.327751 139717576767296 run_grasp.py:339] Running model model_1_multimer_v3_v11_8000_pred_0
+I0510 09:45:58.736566 139717576767296 run_grasp.py:357] model_1_multimer_v3_v11_8000_pred_0 recycle=1, cur recycle=1 pLDDT=89.5 pTM=0.136 ipTM=0.102 tol=32.7
+I0510 09:46:02.561857 139717576767296 run_grasp.py:357] model_1_multimer_v3_v11_8000_pred_0 recycle=2, cur recycle=2 pLDDT=94.1 pTM=0.134 ipTM=0.121 tol=1.23
+I0510 09:46:06.367653 139717576767296 run_grasp.py:357] model_1_multimer_v3_v11_8000_pred_0 recycle=3, cur recycle=3 pLDDT=94.1 pTM=0.134 ipTM=0.121 tol=0.457
+I0510 09:46:06.590181 139717576767296 restraints_process.py:207] inter-residue restraints: 5(5 inter-chain + 0 intra-chain)
+I0510 09:46:06.590364 139717576767296 restraints_process.py:209] Inter-chain restraints
+I0510 09:46:06.595130 139717576767296 restraints_process.py:164] Included! Satisfied! A13/conf88.25/nbdist_avg_ca3.79<==>B35/conf63.22/nbdist_avg_ca3.60/dist_cb4.95, range: 0-8.0, rm_score 0, rm_thre 0.0
+I0510 09:46:06.595274 139717576767296 restraints_process.py:164] Included! Satisfied! A37/conf92.88/nbdist_avg_ca3.85<==>B107/conf74.56/nbdist_avg_ca3.64/dist_cb5.53, range: 0-8.0, rm_score 0, rm_thre 0.0
+I0510 09:46:06.595354 139717576767296 restraints_process.py:164] Included! Satisfied! A40/conf95.50/nbdist_avg_ca3.76<==>B59/conf88.81/nbdist_avg_ca3.73/dist_cb5.90, range: 0-8.0, rm_score 0, rm_thre 0.0
+I0510 09:46:06.595427 139717576767296 restraints_process.py:164] Included! Satisfied! A40/conf95.50/nbdist_avg_ca3.76<==>B61/conf91.69/nbdist_avg_ca3.80/dist_cb6.21, range: 0-8.0, rm_score 0, rm_thre 0.0
+I0510 09:46:06.595497 139717576767296 restraints_process.py:164] Included! Satisfied! A91/conf93.69/nbdist_avg_ca3.87<==>B61/conf91.69/nbdist_avg_ca3.80/dist_cb4.17, range: 0-8.0, rm_score 0, rm_thre 0.0
+I0510 09:46:06.595540 139717576767296 restraints_process.py:165] >>>>> Total 5: 5 included, 5 satisfied
+I0510 09:46:06.613754 139717576767296 restraints_process.py:250] Breakage info ==========
+I0510 09:46:06.613919 139717576767296 restraints_process.py:251] Break number: 0, Max neigbour CA dist: 4.08203125
+
+I0510 09:46:06.613963 139717576767296 restraints_process.py:253] Recall info=============
+I0510 09:46:06.614023 139717576767296 restraints_process.py:261] interchain (w 1): recall 0.9999999980000001, recall weighted by confidence: 1.0
+I0510 09:46:06.617173 139717576767296 model.py:239] Output shape was {'aligned_confidence_probs': (289, 289, 64), 'distogram': {'bin_edges': (63,), 'logits': (289, 289, 64)}, 'experimentally_resolved': {'logits': (289, 37)}, 'iptm': (), 'masked_msa': {'logits': (508, 289, 22)}, 'max_predicted_aligned_error': (), 'mean_plddt': (), 'plddt': (289,), 'predicted_aligned_error': (289, 289), 'predicted_lddt': {'logits': (289, 50)}, 'ptm': (), 'ranking_confidence': (), 'structure_module': {'final_atom_mask': (289, 37), 'final_atom_positions': (289, 37, 3)}, 'tol': (), 'recall': ()}
+I0510 09:46:06.617398 139717576767296 run_grasp.py:416] Recycle 3 finished
+I0510 09:46:06.807521 139717576767296 run_grasp.py:339] Running model model_1_multimer_v3_v11_14000_pred_0
+I0510 09:46:47.966243 139717576767296 run_grasp.py:357] model_1_multimer_v3_v11_14000_pred_0 recycle=1, cur recycle=1 pLDDT=89.9 pTM=0.135 ipTM=0.101 tol=33
+I0510 09:46:51.724980 139717576767296 run_grasp.py:357] model_1_multimer_v3_v11_14000_pred_0 recycle=2, cur recycle=2 pLDDT=91 pTM=0.135 ipTM=0.1 tol=0.711
+I0510 09:46:55.466453 139717576767296 run_grasp.py:357] model_1_multimer_v3_v11_14000_pred_0 recycle=3, cur recycle=3 pLDDT=91.9 pTM=0.135 ipTM=0.101 tol=0.553
+I0510 09:46:59.205385 139717576767296 run_grasp.py:357] model_1_multimer_v3_v11_14000_pred_0 recycle=4, cur recycle=4 pLDDT=92.3 pTM=0.135 ipTM=0.1 tol=0.215
+I0510 09:46:59.288525 139717576767296 restraints_process.py:207] inter-residue restraints: 5(5 inter-chain + 0 intra-chain)
+I0510 09:46:59.288692 139717576767296 restraints_process.py:209] Inter-chain restraints
+I0510 09:46:59.289131 139717576767296 restraints_process.py:164] Included! Satisfied! A13/conf77.38/nbdist_avg_ca3.77<==>B35/conf65.06/nbdist_avg_ca3.58/dist_cb6.43, range: 0-8.0, rm_score 0, rm_thre 0.0
+I0510 09:46:59.289236 139717576767296 restraints_process.py:164] Included! Satisfied! A37/conf84.81/nbdist_avg_ca3.81<==>B107/conf62.84/nbdist_avg_ca3.58/dist_cb4.95, range: 0-8.0, rm_score 0, rm_thre 0.0
+I0510 09:46:59.289303 139717576767296 restraints_process.py:164] Included! Satisfied! A40/conf83.88/nbdist_avg_ca3.73<==>B59/conf69.62/nbdist_avg_ca3.83/dist_cb6.79, range: 0-8.0, rm_score 0, rm_thre 0.0
+I0510 09:46:59.289364 139717576767296 restraints_process.py:164] Included! Satisfied! A40/conf83.88/nbdist_avg_ca3.73<==>B61/conf69.81/nbdist_avg_ca3.77/dist_cb5.27, range: 0-8.0, rm_score 0, rm_thre 0.0
+I0510 09:46:59.289422 139717576767296 restraints_process.py:164] Included! Satisfied! A91/conf76.38/nbdist_avg_ca3.68<==>B61/conf69.81/nbdist_avg_ca3.77/dist_cb4.37, range: 0-8.0, rm_score 0, rm_thre 0.0
+I0510 09:46:59.289457 139717576767296 restraints_process.py:165] >>>>> Total 5: 5 included, 5 satisfied
+I0510 09:46:59.307018 139717576767296 restraints_process.py:250] Breakage info ==========
+I0510 09:46:59.307178 139717576767296 restraints_process.py:251] Break number: 0, Max neigbour CA dist: 3.900390625
+
+I0510 09:46:59.307218 139717576767296 restraints_process.py:253] Recall info=============
+I0510 09:46:59.307251 139717576767296 restraints_process.py:261] interchain (w 1): recall 0.9999999980000001, recall weighted by confidence: 1.0
+I0510 09:46:59.309188 139717576767296 model.py:239] Output shape was {'aligned_confidence_probs': (289, 289, 64), 'distogram': {'bin_edges': (63,), 'logits': (289, 289, 64)}, 'experimentally_resolved': {'logits': (289, 37)}, 'iptm': (), 'masked_msa': {'logits': (508, 289, 22)}, 'max_predicted_aligned_error': (), 'mean_plddt': (), 'plddt': (289,), 'predicted_aligned_error': (289, 289), 'predicted_lddt': {'logits': (289, 50)}, 'ptm': (), 'ranking_confidence': (), 'structure_module': {'final_atom_mask': (289, 37), 'final_atom_positions': (289, 37, 3)}, 'tol': (), 'recall': ()}
+I0510 09:46:59.309412 139717576767296 run_grasp.py:416] Recycle 4 finished
+I0510 09:46:59.340286 139717576767296 run_grasp.py:339] Running model model_1_multimer_v3_v11_20000_pred_0
+I0510 09:47:40.514909 139717576767296 run_grasp.py:357] model_1_multimer_v3_v11_20000_pred_0 recycle=1, cur recycle=1 pLDDT=90 pTM=0.136 ipTM=0.1 tol=32.9
+I0510 09:47:44.263797 139717576767296 run_grasp.py:357] model_1_multimer_v3_v11_20000_pred_0 recycle=2, cur recycle=2 pLDDT=89.5 pTM=0.136 ipTM=0.1 tol=0.775
+I0510 09:47:48.021147 139717576767296 run_grasp.py:357] model_1_multimer_v3_v11_20000_pred_0 recycle=3, cur recycle=3 pLDDT=91.1 pTM=0.135 ipTM=0.0995 tol=0.992
+I0510 09:47:51.785227 139717576767296 run_grasp.py:357] model_1_multimer_v3_v11_20000_pred_0 recycle=4, cur recycle=4 pLDDT=91 pTM=0.135 ipTM=0.102 tol=0.654
+I0510 09:47:55.543669 139717576767296 run_grasp.py:357] model_1_multimer_v3_v11_20000_pred_0 recycle=5, cur recycle=5 pLDDT=91.6 pTM=0.135 ipTM=0.0991 tol=0.652
+I0510 09:47:59.296233 139717576767296 run_grasp.py:357] model_1_multimer_v3_v11_20000_pred_0 recycle=6, cur recycle=6 pLDDT=91.4 pTM=0.135 ipTM=0.103 tol=0.555
+I0510 09:48:03.061021 139717576767296 run_grasp.py:357] model_1_multimer_v3_v11_20000_pred_0 recycle=7, cur recycle=7 pLDDT=91.6 pTM=0.135 ipTM=0.0985 tol=0.564
+I0510 09:48:06.823778 139717576767296 run_grasp.py:357] model_1_multimer_v3_v11_20000_pred_0 recycle=8, cur recycle=8 pLDDT=91.4 pTM=0.135 ipTM=0.103 tol=0.459
+I0510 09:48:06.906652 139717576767296 restraints_process.py:207] inter-residue restraints: 5(5 inter-chain + 0 intra-chain)
+I0510 09:48:06.906813 139717576767296 restraints_process.py:209] Inter-chain restraints
+I0510 09:48:06.907271 139717576767296 restraints_process.py:164] Included! Satisfied! A13/conf70.12/nbdist_avg_ca3.63<==>B35/conf45.59/nbdist_avg_ca3.66/dist_cb6.71, range: 0-8.0, rm_score 0, rm_thre 0.0
+I0510 09:48:06.907372 139717576767296 restraints_process.py:164] Included! Satisfied! A37/conf82.38/nbdist_avg_ca3.63<==>B107/conf58.34/nbdist_avg_ca3.55/dist_cb3.12, range: 0-8.0, rm_score 0, rm_thre 0.0
+I0510 09:48:06.907438 139717576767296 restraints_process.py:164] Included! Satisfied! A40/conf81.38/nbdist_avg_ca3.61<==>B59/conf58.28/nbdist_avg_ca3.67/dist_cb7.21, range: 0-8.0, rm_score 0, rm_thre 0.0
+I0510 09:48:06.907497 139717576767296 restraints_process.py:164] Included! Satisfied! A40/conf81.38/nbdist_avg_ca3.61<==>B61/conf60.31/nbdist_avg_ca3.71/dist_cb5.01, range: 0-8.0, rm_score 0, rm_thre 0.0
+I0510 09:48:06.907556 139717576767296 restraints_process.py:164] Included! Satisfied! A91/conf72.19/nbdist_avg_ca3.59<==>B61/conf60.31/nbdist_avg_ca3.71/dist_cb5.32, range: 0-8.0, rm_score 0, rm_thre 0.0
+I0510 09:48:06.907591 139717576767296 restraints_process.py:165] >>>>> Total 5: 5 included, 5 satisfied
+I0510 09:48:06.924857 139717576767296 restraints_process.py:250] Breakage info ==========
+I0510 09:48:06.925015 139717576767296 restraints_process.py:251] Break number: 0, Max neigbour CA dist: 3.953125
+
+I0510 09:48:06.925056 139717576767296 restraints_process.py:253] Recall info=============
+I0510 09:48:06.925090 139717576767296 restraints_process.py:261] interchain (w 1): recall 0.9999999980000001, recall weighted by confidence: 1.0
+I0510 09:48:06.927058 139717576767296 model.py:239] Output shape was {'aligned_confidence_probs': (289, 289, 64), 'distogram': {'bin_edges': (63,), 'logits': (289, 289, 64)}, 'experimentally_resolved': {'logits': (289, 37)}, 'iptm': (), 'masked_msa': {'logits': (508, 289, 22)}, 'max_predicted_aligned_error': (), 'mean_plddt': (), 'plddt': (289,), 'predicted_aligned_error': (289, 289), 'predicted_lddt': {'logits': (289, 50)}, 'ptm': (), 'ranking_confidence': (), 'structure_module': {'final_atom_mask': (289, 37), 'final_atom_positions': (289, 37, 3)}, 'tol': (), 'recall': ()}
+I0510 09:48:06.927286 139717576767296 run_grasp.py:416] Recycle 8 finished
+I0510 09:48:06.958149 139717576767296 run_grasp.py:339] Running model model_1_multimer_v3_v11_22000_pred_0
+I0510 09:48:48.585386 139717576767296 run_grasp.py:357] model_1_multimer_v3_v11_22000_pred_0 recycle=1, cur recycle=1 pLDDT=90.1 pTM=0.136 ipTM=0.103 tol=32.8
+I0510 09:48:52.374038 139717576767296 run_grasp.py:357] model_1_multimer_v3_v11_22000_pred_0 recycle=2, cur recycle=2 pLDDT=91.6 pTM=0.135 ipTM=0.0986 tol=0.702
+I0510 09:48:56.126801 139717576767296 run_grasp.py:357] model_1_multimer_v3_v11_22000_pred_0 recycle=3, cur recycle=3 pLDDT=91.4 pTM=0.136 ipTM=0.1 tol=0.385
+I0510 09:48:56.206281 139717576767296 restraints_process.py:207] inter-residue restraints: 5(5 inter-chain + 0 intra-chain)
+I0510 09:48:56.206448 139717576767296 restraints_process.py:209] Inter-chain restraints
+I0510 09:48:56.206874 139717576767296 restraints_process.py:164] Included! Satisfied! A13/conf74.94/nbdist_avg_ca3.65<==>B35/conf49.81/nbdist_avg_ca3.68/dist_cb5.75, range: 0-8.0, rm_score 0, rm_thre 0.0
+I0510 09:48:56.206968 139717576767296 restraints_process.py:164] Included! Satisfied! A37/conf81.94/nbdist_avg_ca3.68<==>B107/conf57.78/nbdist_avg_ca3.55/dist_cb3.86, range: 0-8.0, rm_score 0, rm_thre 0.0
+I0510 09:48:56.207035 139717576767296 restraints_process.py:164] Included! Satisfied! A40/conf81.31/nbdist_avg_ca3.64<==>B59/conf61.44/nbdist_avg_ca3.75/dist_cb6.80, range: 0-8.0, rm_score 0, rm_thre 0.0
+I0510 09:48:56.207093 139717576767296 restraints_process.py:164] Included! Satisfied! A40/conf81.31/nbdist_avg_ca3.64<==>B61/conf63.78/nbdist_avg_ca3.79/dist_cb4.65, range: 0-8.0, rm_score 0, rm_thre 0.0
+I0510 09:48:56.207151 139717576767296 restraints_process.py:164] Included! Satisfied! A91/conf75.19/nbdist_avg_ca3.65<==>B61/conf63.78/nbdist_avg_ca3.79/dist_cb4.36, range: 0-8.0, rm_score 0, rm_thre 0.0
+I0510 09:48:56.207186 139717576767296 restraints_process.py:165] >>>>> Total 5: 5 included, 5 satisfied
+I0510 09:48:56.223848 139717576767296 restraints_process.py:250] Breakage info ==========
+I0510 09:48:56.224033 139717576767296 restraints_process.py:251] Break number: 0, Max neigbour CA dist: 4.06640625
+
+I0510 09:48:56.224078 139717576767296 restraints_process.py:253] Recall info=============
+I0510 09:48:56.224117 139717576767296 restraints_process.py:261] interchain (w 1): recall 0.9999999980000001, recall weighted by confidence: 1.0
+I0510 09:48:56.226112 139717576767296 model.py:239] Output shape was {'aligned_confidence_probs': (289, 289, 64), 'distogram': {'bin_edges': (63,), 'logits': (289, 289, 64)}, 'experimentally_resolved': {'logits': (289, 37)}, 'iptm': (), 'masked_msa': {'logits': (508, 289, 22)}, 'max_predicted_aligned_error': (), 'mean_plddt': (), 'plddt': (289,), 'predicted_aligned_error': (289, 289), 'predicted_lddt': {'logits': (289, 50)}, 'ptm': (), 'ranking_confidence': (), 'structure_module': {'final_atom_mask': (289, 37), 'final_atom_positions': (289, 37, 3)}, 'tol': (), 'recall': ()}
+I0510 09:48:56.226346 139717576767296 run_grasp.py:416] Recycle 3 finished
+I0510 09:48:56.257420 139717576767296 run_grasp.py:339] Running model model_1_multimer_v3_v11_22946222_pred_0
+I0510 09:49:42.615107 139717576767296 run_grasp.py:357] model_1_multimer_v3_v11_22946222_pred_0 recycle=1, cur recycle=1 pLDDT=86.7 pTM=0.138 ipTM=0.107 tol=31.2
+I0510 09:49:46.329552 139717576767296 run_grasp.py:357] model_1_multimer_v3_v11_22946222_pred_0 recycle=2, cur recycle=2 pLDDT=88.9 pTM=0.138 ipTM=0.102 tol=1.74
+I0510 09:49:50.031118 139717576767296 run_grasp.py:357] model_1_multimer_v3_v11_22946222_pred_0 recycle=3, cur recycle=3 pLDDT=89.1 pTM=0.138 ipTM=0.098 tol=0.542
+I0510 09:49:53.737331 139717576767296 run_grasp.py:357] model_1_multimer_v3_v11_22946222_pred_0 recycle=4, cur recycle=4 pLDDT=89.4 pTM=0.138 ipTM=0.0983 tol=0.315
+I0510 09:49:53.817182 139717576767296 restraints_process.py:207] inter-residue restraints: 5(5 inter-chain + 0 intra-chain)
+I0510 09:49:53.817362 139717576767296 restraints_process.py:209] Inter-chain restraints
+I0510 09:49:53.817830 139717576767296 restraints_process.py:164] Included! Satisfied! A13/conf76.25/nbdist_avg_ca3.82<==>B35/conf54.97/nbdist_avg_ca3.45/dist_cb5.93, range: 0-8.0, rm_score 0, rm_thre 0.0
+I0510 09:49:53.817932 139717576767296 restraints_process.py:164] Included! Satisfied! A37/conf80.38/nbdist_avg_ca4.07<==>B107/conf60.09/nbdist_avg_ca3.89/dist_cb4.34, range: 0-8.0, rm_score 0, rm_thre 0.0
+I0510 09:49:53.818000 139717576767296 restraints_process.py:164] Included! Satisfied! A40/conf77.62/nbdist_avg_ca3.65<==>B59/conf62.06/nbdist_avg_ca4.06/dist_cb6.20, range: 0-8.0, rm_score 0, rm_thre 0.0
+I0510 09:49:53.818077 139717576767296 restraints_process.py:164] Included! Satisfied! A40/conf77.62/nbdist_avg_ca3.65<==>B61/conf62.88/nbdist_avg_ca3.46/dist_cb2.66, range: 0-8.0, rm_score 0, rm_thre 0.0
+I0510 09:49:53.818137 139717576767296 restraints_process.py:164] Included! Satisfied! A91/conf72.88/nbdist_avg_ca3.67<==>B61/conf62.88/nbdist_avg_ca3.46/dist_cb4.81, range: 0-8.0, rm_score 0, rm_thre 0.0
+I0510 09:49:53.818172 139717576767296 restraints_process.py:165] >>>>> Total 5: 5 included, 5 satisfied
+I0510 09:49:53.834962 139717576767296 restraints_process.py:250] Breakage info ==========
+I0510 09:49:53.835130 139717576767296 restraints_process.py:251] Break number: 0, Max neigbour CA dist: 4.32421875
+
+I0510 09:49:53.835176 139717576767296 restraints_process.py:253] Recall info=============
+I0510 09:49:53.835215 139717576767296 restraints_process.py:261] interchain (w 1): recall 0.9999999980000001, recall weighted by confidence: 1.0
+I0510 09:49:53.837234 139717576767296 model.py:239] Output shape was {'aligned_confidence_probs': (289, 289, 64), 'distogram': {'bin_edges': (63,), 'logits': (289, 289, 64)}, 'experimentally_resolved': {'logits': (289, 37)}, 'iptm': (), 'masked_msa': {'logits': (508, 289, 23)}, 'max_predicted_aligned_error': (), 'mean_plddt': (), 'plddt': (289,), 'predicted_aligned_error': (289, 289), 'predicted_lddt': {'logits': (289, 50)}, 'ptm': (), 'ranking_confidence': (), 'structure_module': {'final_atom_mask': (289, 37), 'final_atom_positions': (289, 37, 3)}, 'tol': (), 'recall': ()}
+I0510 09:49:53.837461 139717576767296 run_grasp.py:416] Recycle 4 finished
+I0510 09:49:59.115517 139717576767296 amber_minimize.py:178] alterations info: {'nonstandard_residues': [], 'removed_heterogens': set(), 'missing_residues': {}, 'missing_heavy_atoms': {}, 'missing_terminals': {<Residue 152 (GLN) of chain 0>: ['OXT'], <Residue 288 (HIS) of chain 1>: ['OXT']}, 'Se_in_MET': [], 'removed_chains': {0: []}}
+I0510 09:49:59.335333 139717576767296 amber_minimize.py:408] Minimizing protein, attempt 1 of 100.
+I0510 09:49:59.715605 139717576767296 amber_minimize.py:69] Restraining 2145 / 4195 particles.
+I0510 09:50:02.286213 139717576767296 amber_minimize.py:178] alterations info: {'nonstandard_residues': [], 'removed_heterogens': set(), 'missing_residues': {}, 'missing_heavy_atoms': {}, 'missing_terminals': {}, 'Se_in_MET': [], 'removed_chains': {0: []}}
+I0510 09:50:09.781992 139717576767296 amber_minimize.py:500] Iteration completed: Einit 6622.48 Efinal -6261.22 Time 1.24 s num residue violations 0 num residue exclusions 0 
