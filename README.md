@@ -37,14 +37,14 @@ To install GRASP-JAX, follow these steps:
 
 4. Install the necessary packages:
    ```
+   conda install -y -c conda-forge openmm==8.0.0 cudatoolkit==11.2.2 pdbfixer
    pip install -r requirements.txt
-   pip install -U "jax[cuda12]" # need to check your CUDA version, this will install the correct version of jaxlib and jax
-   conda install -c conda-forge pdbfixer
+   pip install --upgrade --no-cache-dir jax==0.3.25 jaxlib==0.3.25+cuda11.cudnn805 -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
    ```
 
   The installation takes ~10 minutes.
 
-5. Install MSA & Template Search Tools:
+1. Install MSA & Template Search Tools:
    
 To enable multiple sequence alignment (MSA) and template searching, ensure you have the following tools installed:
 
