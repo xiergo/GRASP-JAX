@@ -282,7 +282,7 @@ def predict_structure(
       restraints_input = pickle.load(open(restraints_path,'rb'))
       logging.info(f'read restraints from {restraints_path} successfully')
     else:
-      assert fasta_path is not None, 'fasta_path should be provided when restraints_path is not a ".pkl" file'
+      assert fasta_path is not None and os.path.exists(fasta_path), 'fasta_path should be provided when restraints_path is not a ".pkl" file'
       r = Restraints(fasta_path)
       restraints_input = r.convert_restraints(restraints_path)
     # if 'asym_id' in restraints_input:
