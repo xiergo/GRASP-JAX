@@ -426,9 +426,9 @@ def predict_structure(
         result=prediction_result,
         b_factors=plddt_b_factors,
         remove_leading_feature_dimension=not model_runner.multimer_mode)
+    my_recall = prediction_result['recall'] if prediction_result['recall'] is not None else -1
     # Rank by model confidence.
     if FLAGS.rank_by == 'plddt':
-      my_recall = prediction_result['recall'] if prediction_result['recall'] is not None else -1
       ranking_confidences[model_name] = prediction_result['mean_plddt'] + (my_recall>=0.3)*1000
       label = 'plddt+1000*(recall>=0.3)'
     elif FLAGS.rank_by == 'ptm':
