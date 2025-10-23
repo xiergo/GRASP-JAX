@@ -299,15 +299,14 @@ The output score.csv records the satisfaction for RPRs/IRs and density map.
 
 ## Citations
 If you use this package, please cite as the following:
-```python
-@article {Xie2024.09.16.613256,
-	author = {Xie, Yuhao and Zhang, Chengwei and Li, Shimian and Du, Xinyu and Wang, Min and Hu, Yingtong and Liu, Sirui and Gao, Yi Qin},
-	title = {Integrating various Experimental Information to Assist Protein Complex Structure Prediction by GRASP},
-	elocation-id = {2024.09.16.613256},
-	year = {2024},
-	doi = {10.1101/2024.09.16.613256},
-	publisher = {Cold Spring Harbor Laboratory},
-	eprint = {https://www.biorxiv.org/content/early/2024/09/21/2024.09.16.613256.full.pdf},
-	journal = {bioRxiv}
+```bibtex
+@Article{GRASP,
+  author  = {Yuhao Xie, Chengwei Zhang, Shimian Li, Xinyu Du, Yanjiao Lu, Min Wang, Yingtong Hu, Zhenyu Chen, Sirui Liu, Yi Qin Gao},
+  journal = {Nature Methods},
+  title   = {Integrating diverse experimental information to assist protein complex structure prediction by GRASP},
+  year    = {2025},
+  doi     = {10.1038/s41592-025-02820-1}
+}
+```
 
 
