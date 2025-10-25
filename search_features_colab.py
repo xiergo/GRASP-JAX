@@ -101,7 +101,7 @@ def search_features_colab(fasta_path, outdir):
       text_file.write(">1\n%s" % query_sequence)
 
   #@markdown ### Advanced settings
-  model_type = "auto" #@param ["auto", "alphafold2_ptm", "alphafold2_multimer_v1", "alphafold2_multimer_v2", "alphafold2_multimer_v3", "deepfold_v1", "alphafold2"]
+  model_type = "alphafold2_multimer_v1" #@param ["auto", "alphafold2_ptm", "alphafold2_multimer_v1", "alphafold2_multimer_v2", "alphafold2_multimer_v3", "deepfold_v1", "alphafold2"]
   #@markdown - if `auto` selected, will use `alphafold2_ptm` for monomer prediction and `alphafold2_multimer_v3` for complex prediction.
   #@markdown Any of the mode_types can be used (regardless if input is monomer or complex).
   num_recycles = "3" #@param ["auto", "0", "1", "3", "6", "12", "24", "48"]
