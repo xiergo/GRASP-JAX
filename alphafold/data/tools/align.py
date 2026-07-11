@@ -235,14 +235,18 @@ def reorder_and_renumber_chains(input_pdb, output_pdb, reference_sequences):
     for chain in list(new_structure):
         new_structure.detach_child(chain.id)
 
-    sequence_to_chain = {seq: chain_id for chain_id, seq in input_sequences.items()}
+    from collections import defaultdict
+    sequence_to_chain = defaultdict(list)
+    for chain_id, seq in input_sequences.items():
+        sequence_to_chain[seq].append(chain_id)
     
     new_chain_ids = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     new_chain_index = 0
     
     for ref_seq in reference_sequences:
-        chain_id = sequence_to_chain.get(ref_seq)
-        if chain_id:
+        chain_ids = sequence_to_chain.get(ref_seq, [])
+        if chain_ids:
+            chain_id = chain_ids.pop(0)
             new_chain = model[chain_id].copy()
             new_chain.id = new_chain_ids[new_chain_index]
             new_structure.add(new_chain)

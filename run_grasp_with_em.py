@@ -388,7 +388,7 @@ def predict_structure(
           combfit_clean_output = os.path.join(output_dir,f'combfit_{model_name}_best_structure_clean.pdb')
           if it==1:
             chains = parse_pdb_chains(reorder_align_density_pdb_path)
-            n_groups = np.random.randint(2, len(chains)) 
+            n_groups = len(chains) if len(chains) <= 2 else np.random.randint(2, len(chains))
             grouped_chains = random_group_by_proximity(chains, n_groups)
             residue_mapping = merge_chains_by_group(reorder_align_density_pdb_path, grouped_chains,dock_initial_pdb_path)
             # combfit_path = os.path.abspath(combfit_newest.__file__)
